@@ -1,4 +1,4 @@
-﻿#include <vtkAutoInit.h>
+#include <vtkAutoInit.h>
 
 VTK_MODULE_INIT(vtkRenderingOpenGL2);
 VTK_MODULE_INIT(vtkRenderingFreeType);
@@ -61,10 +61,10 @@ public:
 	vtkTypeMacro(MouseMovemenetStyle, vtkInteractorStyleTrackballCamera);
 	bool flg = false;
 	int counter = 0;
-	double grid_CellX = 20;
-	double grid_CellY = 20;
+	double grid_CellX = 0.05;
+	double grid_CellY = 0.05;
 	double viewportSize[2];
-	int cellScreenWidth_ = 10;
+	int cellScreenWidth_ = 0;
 	double worldToScreenCoeff_ = 0;
 	double mult = 1;
 	virtual void OnLeftButtonDown()
@@ -72,88 +72,68 @@ public:
 		// forward events
 		SetTimerDuration(10);
 		UseTimersOn();
-		
+
 		vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
 		StartTimer();
-		
+
 	};
 
 	virtual void OnRightButtonDown()
 	{
-		cout << "Pressed right mouse button." << endl;
+		//cout << "Pressed right mouse button." << endl;
 		vtkInteractorStyleTrackballCamera::OnRightButtonDown();
 	}
 
 	virtual void OnMiddleButtonDown()
 	{
-		cout << "Pressed middle mouse button." << endl;
+		//cout << "Pressed middle mouse button." << endl;
 		vtkInteractorStyleTrackballCamera::OnMiddleButtonDown();
 	}
 
 	virtual void OnLeftButtonUp()
-	{ 
+	{
 		EndTimer();
-		cout << "Unpressed left mouse button." << endl;
+		//cout << "Unpressed left mouse button." << endl;
 		vtkInteractorStyleTrackballCamera::OnLeftButtonUp();
 
 	}
 
 
-
+	
 	virtual void OnMouseWheelBackward() {
-		counter--;
-		if (counter % 5 == 0 ) {
-			//counter = 0;
-			cout << "BACK" << endl;
-			//mult *= 2;
-			//grid_CellX -= 5;
-			OnTimer();
-		}
 		vtkInteractorStyleTrackballCamera::OnMouseWheelBackward();
+		counter--;
+		if (counter % 5 == 0) {
+			grid_CellX *= 2;
+		}
+		OnTimer();
+		flg = true;
 	}
 	virtual void OnMouseWheelForward() {
-		counter++;
-		if (counter % 5 == 0 ) {
-			//counter = 0;
-			cout << "UP" << endl;
-			//mult /= 2;
-			//grid_CellX += 5;
-			OnTimer();
-		}
 		vtkInteractorStyleTrackballCamera::OnMouseWheelForward();
+		counter++;
+		if (counter % 5 == 0) {
+			grid_CellX /= 2;
+		}
+		OnTimer();
+		flg = true;
 	}
+	
 
 	virtual void OnTimer() {
 		int* sizes = renderer->GetSize();
+		
 		auto cameraScale = camera->GetParallelScale();
 		isPaneOnly_ = (cameraScale == lastCameraScale_);
 		lastCameraScale_ = cameraScale;
 		auto height = 2 * cameraScale;
 		worldToScreenCoeff_ = height / sizes[1];
 		auto width = worldToScreenCoeff_ * sizes[0];
-		viewportSize[0] = width;
-		viewportSize[1] = height;
-
-
-		if (cellScreenWidth_ != 0)												// Если у нас уже известна ширина клетки в пикселях 
-		{
-			// В этом случае клетка после масштабирования должна быть примерно того же размера в пикселях
-			double cellWorldWidth = cellScreenWidth_ * worldToScreenCoeff_;		// Такой примерно должна быть ширина клетки в мировых координатах
-
-			//MantissaRounder rounder; ???
-			cellWorldWidth = cellWorldWidth;			// Округляем
-
-			double scale = cellWorldWidth / grid_CellX;
-			grid_CellX *= scale;
-		}
-		else
-		{
-			cellScreenWidth_ = grid_CellX / worldToScreenCoeff_;				// Иначе масштибироование не делаем, а размер в пикселях запоминаем
-		}
-
-
-		auto scaleX = std::abs(camera->GetFocalPoint()[0]) + viewportSize[0] / 2;
-		auto scaleY = std::abs(camera->GetFocalPoint()[1]) + viewportSize[1] / 2;
+		viewportSize[0] = width  * camera->GetPosition()[2];
+		viewportSize[1] = height  * camera->GetPosition()[2];
+		
+		auto scaleX = std::abs(camera->GetFocalPoint()[0]) + viewportSize[0] / 2.0;
+		auto scaleY = std::abs(camera->GetFocalPoint()[1]) + viewportSize[1] / 2.0;
 
 		double scale[3] = { scaleX, scaleY, 0 };
 		axesActor_->SetScale(scale);
@@ -163,22 +143,25 @@ public:
 			rebuildXlines();
 			rebuildYlines();
 		}
+		if (flg) {
+			rebuildXlines();
+			rebuildYlines();
+			flg = false;
+		}
 
 		//cout << "Pressed left mouse button." << viewportSize[0] << "===" << viewportSize[1] << endl;
 
-		double xScale[3] = { viewportSize[0] / 2 + grid_CellX, 1, 1 };				// Так мы задаем длины линий решетки (поскольку сначала они были от -1 до 1). Прибавляем grid_.cell.x чтобы было немного с запасом, пототму что решетка рисуется не точно по центрн
+		double xScale[3] = { viewportSize[0] / 2 + grid_CellX, 1, 0 };				// Так мы задаем длины линий решетки (поскольку сначала они были от -1 до 1). Прибавляем grid_.cell.x чтобы было немного с запасом, пототму что решетка рисуется не точно по центрн
 		axesY_->SetScale(xScale);
 
-		double yScale[3] = { 1, viewportSize[1] / 2 + grid_CellX, 1 };
+		double yScale[3] = { 1, viewportSize[1] / 2 + grid_CellX, 0 };
 		axesX_->SetScale(yScale);
-
+		
 		double xmove = floor(camera->GetFocalPoint()[0] / grid_CellX) * grid_CellX;
 		double ymove = floor(camera->GetFocalPoint()[1] / grid_CellX) * grid_CellX;
 
-
-
-		xmove += fmod(grid_CellY, grid_CellX);
-		ymove += fmod(grid_CellY, grid_CellX);
+		xmove += fmod(grid_CellX, grid_CellX);
+		ymove += fmod(grid_CellX, grid_CellX);
 
 		axesX_->SetPosition(xmove, camera->GetFocalPoint()[1], 0);
 		axesY_->SetPosition(camera->GetFocalPoint()[0], ymove, 0);
@@ -253,34 +236,7 @@ public:
 
 vtkStandardNewMacro(MouseMovemenetStyle);
 
-/*
-class MyRubberBand : public vtkInteractorStyleRubberBand2D
-{
-public:
-	static MyRubberBand* New();
-	vtkTypeMacro(MyRubberBand, vtkInteractorStyleRubberBand2D);
 
-	virtual void OnRightButtonUp()
-	{
-		// Forward events
-		//vtkInteractorStyleRubberBand2D::OnRightButtonUp();
-		//vtkInteractorStyleRubberBand2D::OnMouseMove();
-
-		std::cout << "Start position: " << this->StartPosition[0] << " " << this->StartPosition[1] << std::endl;
-		std::cout << "End position: " << this->EndPosition[0] << " " << this->EndPosition[1] << std::endl;
-	}
-
-	virtual void OnMouseMove(double* position)
-	{
-		vtkInteractorStyleRubberBand2D::OnMouseMove();
-	}
-
-	virtual void OnMouseWheelBackward()
-	{
-		vtkInteractorStyleRubberBand2D::OnMouseWheelBackward();
-	}
-};
-*/
 
 static void CameraModifiedCallback(vtkObject* caller,
 	long unsigned int vtkNotUsed(eventId),
@@ -352,7 +308,7 @@ int main() {
 	lines->InsertNextCell(2, hor);
 	polydata->SetLines(lines);
 
-	
+
 
 	vtkSmartPointer<vtkPolyDataMapper> mapper = vtkPolyDataMapper::New();
 	mapper->SetInputData(polydata);
@@ -360,7 +316,7 @@ int main() {
 	axesActor_->GetProperty()->SetColor(0, 0, 0);
 	////
 
-	double viewportSize[2] = { 1 ,1 }, grid_CellX = 1/40.0;
+	double viewportSize[2] = { 1 ,1 }, grid_CellX = 1 / 40.0;
 
 	int halfLinesNum = 40;
 
@@ -391,7 +347,7 @@ int main() {
 	polydata1->SetPoints(points1);
 	polydata1->SetLines(lines1);
 
-	
+
 
 	vtkSmartPointer<vtkPolyDataMapper> mapper1 = vtkPolyDataMapper::New();
 	mapper1->SetInputData(polydata1);
@@ -410,7 +366,7 @@ int main() {
 	points2->InsertNextPoint(0, 1, 0);
 	vtkIdType cell2[] = { 0, 1 };
 	lines2->InsertNextCell(2, cell2);
-	 num = 1;
+	num = 1;
 	for (int i = 1; i <= halfLinesNum; i++)
 	{
 		for (int j = -1; j <= 1; j += 2)
@@ -436,8 +392,8 @@ int main() {
 
 
 	// add the actor to the scene
-	
-	
+
+
 	renderer->AddActor(axesY_);
 	renderer->AddActor(axesX_);
 	renderer->AddActor(axesActor_);
@@ -455,16 +411,16 @@ int main() {
 		vtkSmartPointer<vtkCallbackCommand>::New();
 	modifiedcallback->SetCallback(CameraModifiedCallback);
 
-	
+
 	renderer->SetActiveCamera(camera);
 	//renderer->ResetCamera();
 	renderer->GetActiveCamera()->AddObserver(vtkCommand::ModifiedEvent, modifiedcallback);
 	// Обсудить это. Ибо меняет картинку. Становится немного лучше.
 	renderer->AutomaticLightCreationOff();
 	//renderer->GradientEnvironmentalBGOff();
-	
+
 	cout << camera->GetPosition()[2] << endl;
-	
+
 
 	vtkSmartPointer<MouseMovemenetStyle> style =
 		vtkSmartPointer<MouseMovemenetStyle>::New();
@@ -472,7 +428,7 @@ int main() {
 	// render and interact
 	renderwindow->SetSize(800, 800);
 	renderwindow->Render();
-	
+
 	renderWindowInteractor->Initialize();
 	renderWindowInteractor->EnableRenderOn();
 	renderWindowInteractor->Start();
@@ -480,115 +436,3 @@ int main() {
 	return EXIT_SUCCESS;
 
 }
-
-/*
-int main(int, char* [])
-{
-
-	int gridSize1 = 40;
-	int gridSize2 = 2;
-	int gridSize3 = 4;
-
-	vtkSmartPointer<vtkCamera> camera =
-		vtkSmartPointer<vtkCamera>::New();
-	camera->SetPosition(0, 0, gridSize1 * 2);
-	camera->SetFocalPoint(0, 0, 0);
-
-	int zPosition = camera->GetPosition()[2];
-
-	std::cout << "Start position: " << zPosition << std::endl;
-	vtkSmartPointer<vtkRenderer> renderer =
-		vtkSmartPointer<vtkRenderer>::New();
-
-	renderer->SetActiveCamera(camera);
-
-
-	// create a grid
-
-	vtkSmartPointer<vtkStructuredGrid>structuredgrid1 =
-		creategrid(gridSize1);
-
-	vtkSmartPointer<vtkStructuredGrid>structuredGrid2 =
-		creategrid(gridSize2, gridSize1 / 2.0);
-
-	vtkSmartPointer<vtkStructuredGrid>structuredGrid3 =
-		creategrid(gridSize3, gridSize1 / 4.0);
-
-	// create a mapper and actor
-	vtkSmartPointer<vtkDataSetMapper> gridMapper =
-		vtkSmartPointer<vtkDataSetMapper>::New();
-	gridMapper->SetInputData(structuredgrid1);
-
-	vtkSmartPointer<vtkActor> gridActor =
-		vtkSmartPointer<vtkActor>::New();
-	gridActor->SetPosition(-gridSize1 / 2, -gridSize1 / 2, 0);
-	gridActor->SetMapper(gridMapper);
-	//gridactor->getproperty()->edgevisibilityon();
-	gridActor->GetProperty()->SetRepresentationToWireframe();
-	gridActor->GetProperty()->SetColor(0.9, 0.9, 0.9);
-	//.maper2
-	vtkSmartPointer<vtkDataSetMapper> gridMapperb =
-		vtkSmartPointer<vtkDataSetMapper>::New();
-	gridMapperb->SetInputData(structuredGrid2);
-
-	vtkSmartPointer<vtkActor> gridActorb =
-		vtkSmartPointer<vtkActor>::New();
-	gridActorb->SetPosition(-gridSize1 / 2, -gridSize1 / 2, 0);
-	gridActorb->SetMapper(gridMapperb);
-	//gridactorb->getproperty()->edgevisibilityon();
-	gridActorb->GetProperty()->SetRepresentationToWireframe();
-	gridActorb->GetProperty()->SetColor(0.7, 0.7, 0.7);
-	//.maper3
-	vtkSmartPointer<vtkDataSetMapper> gridMapperc =
-		vtkSmartPointer<vtkDataSetMapper>::New();
-	gridMapperc->SetInputData(structuredGrid3);
-
-	vtkSmartPointer<vtkActor> gridActorc =
-		vtkSmartPointer<vtkActor>::New();
-	gridActorc->SetPosition(-gridSize1 / 2, -gridSize1 / 2, 0);
-	gridActorc->SetMapper(gridMapperc);
-	//gridactorb->getproperty()->edgevisibilityon();
-	gridActorc->GetProperty()->SetRepresentationToWireframe();
-	gridActorc->GetProperty()->SetColor(0.0, 0.0, 0.0);
-
-
-
-	// add the actor to the scene
-	renderer->AddActor(gridActor);
-	renderer->AddActor(gridActorb);
-	renderer->AddActor(gridActorc);
-
-	renderer->SetBackground(1, 1, 1);//background color
-
-	vtkSmartPointer<vtkRenderWindow> renderwindow =
-		vtkSmartPointer<vtkRenderWindow>::New();
-	renderwindow->AddRenderer(renderer);
-
-	vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor =
-		vtkSmartPointer<vtkRenderWindowInteractor>::New();
-	renderWindowInteractor->SetRenderWindow(renderwindow);
-
-	vtkSmartPointer<vtkCallbackCommand> modifiedcallback =
-		vtkSmartPointer<vtkCallbackCommand>::New();
-	modifiedcallback->SetCallback(CameraModifiedCallback);
-
-	renderer->ResetCamera();
-	renderer->GetActiveCamera()->AddObserver(vtkCommand::ModifiedEvent, modifiedcallback);
-	// Обсудить это. Ибо меняет картинку. Становится немного лучше.
-	renderer->AutomaticLightCreationOff();
-	//renderer->GradientEnvironmentalBGOff();
-
-	vtkSmartPointer<MouseMovemenetStyle> style =
-		vtkSmartPointer<MouseMovemenetStyle>::New();
-	renderWindowInteractor->SetInteractorStyle(style);
-
-	// render and interact
-	renderwindow->SetSize(1200, 960);
-	renderwindow->Render();
-	renderWindowInteractor->Initialize();
-	renderWindowInteractor->EnableRenderOn();
-	renderWindowInteractor->Start();
-
-	return EXIT_SUCCESS;
-}
-*/
