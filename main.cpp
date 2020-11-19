@@ -48,6 +48,7 @@ VTK_MODULE_INIT(vtkInteractionStyle);
 
 vtkSmartPointer<vtkActor> axesY_ = vtkSmartPointer<vtkActor>::New();
 vtkSmartPointer<vtkActor> axesX_ = vtkSmartPointer<vtkActor>::New();
+vtkSmartPointer<vtkActor> point_ = vtkSmartPointer<vtkActor>::New();
 vtkSmartPointer<vtkCamera> camera = vtkSmartPointer<vtkCamera>::New();
 vtkSmartPointer<vtkActor> axesActor_ = vtkSmartPointer<vtkActor>::New();
 vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
@@ -70,36 +71,19 @@ public:
 	virtual void OnLeftButtonDown()
 	{
 		// forward events
-		SetTimerDuration(10);
+		SetTimerDuration(1);
 		UseTimersOn();
-
 		vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
 		StartTimer();
-
 	};
-
-	virtual void OnRightButtonDown()
-	{
-		//cout << "Pressed right mouse button." << endl;
-		vtkInteractorStyleTrackballCamera::OnRightButtonDown();
-	}
-
-	virtual void OnMiddleButtonDown()
-	{
-		//cout << "Pressed middle mouse button." << endl;
-		vtkInteractorStyleTrackballCamera::OnMiddleButtonDown();
-	}
 
 	virtual void OnLeftButtonUp()
 	{
 		EndTimer();
 		//cout << "Unpressed left mouse button." << endl;
 		vtkInteractorStyleTrackballCamera::OnLeftButtonUp();
-
 	}
 
-
-	
 	virtual void OnMouseWheelBackward() {
 		vtkInteractorStyleTrackballCamera::OnMouseWheelBackward();
 		countBack++;
@@ -110,6 +94,7 @@ public:
 		OnTimer();
 		flg = true;
 	}
+	
 	virtual void OnMouseWheelForward() {
 		vtkInteractorStyleTrackballCamera::OnMouseWheelForward();
 		countForw++;
@@ -121,8 +106,9 @@ public:
 		flg = true;
 	}
 	
-
 	virtual void OnTimer() {
+
+		rebuildPoint();
 		int* sizes = renderer->GetSize();
 		
 		auto cameraScale = camera->GetParallelScale();
@@ -231,14 +217,33 @@ public:
 		polydata->SetLines(lines);
 		vtkPolyDataMapper::SafeDownCast(axesX_->GetMapper())->SetInputData(polydata);
 	}
+	void rebuildPoint() {
+		vtkSmartPointer<vtkPoints> point = vtkPoints::New();
+		vtkSmartPointer<vtkCellArray> vertices = vtkSmartPointer<vtkCellArray>::New();
+		vtkIdType pid[1];
 
+		int x = Interactor->GetEventPosition()[0];
+		int y = Interactor->GetEventPosition()[1];
+		vtkSmartPointer<vtkCoordinate> coordinate =
+			vtkSmartPointer<vtkCoordinate>::New();
+		coordinate->SetCoordinateSystemToDisplay();
+		coordinate->SetValue(x, y, 0);
+
+		double* world = coordinate->GetComputedWorldValue(this->Interactor->GetRenderWindow()->GetRenderers()->GetFirstRenderer());
+		//std::cout << "World coordinate: " << world[0] << ", " << world[1] << ", " << world[2] << std::endl;
+
+		pid[0] = point->InsertNextPoint(world[0], world[1], 0);
+		vertices->InsertNextCell(1, pid);
+
+		vtkSmartPointer<vtkPolyData> polydataPoint = vtkPolyData::New();
+		polydataPoint->SetPoints(point);
+		polydataPoint->SetVerts(vertices);
+		
+		vtkPolyDataMapper::SafeDownCast(point_->GetMapper())->SetInputData(polydataPoint);
+	}
 };
 
-
-
 vtkStandardNewMacro(MouseMovemenetStyle);
-
-
 
 static void CameraModifiedCallback(vtkObject* caller,
 	long unsigned int vtkNotUsed(eventId),
@@ -290,8 +295,6 @@ vtkSmartPointer<vtkStructuredGrid> creategrid(unsigned int gridsize, double q = 
 }
 
 int main() {
-
-
 
 	vtkSmartPointer<vtkPoints> points = vtkPoints::New();
 	points->Allocate(4);
@@ -392,6 +395,24 @@ int main() {
 	axesX_->SetMapper(mapper2);
 	axesX_->GetProperty()->SetColor(0.8, 0.8, 0.8);
 
+	///
+	vtkSmartPointer<vtkPoints> point = vtkPoints::New();
+	vtkSmartPointer<vtkCellArray> vertices =vtkSmartPointer<vtkCellArray>::New();
+	vtkIdType pid[1];
+	pid[0] = point->InsertNextPoint(0,0,0);
+	vertices->InsertNextCell(1, pid);
+
+	vtkSmartPointer<vtkPolyData> polydataPoint = vtkPolyData::New();
+	polydataPoint->SetPoints(point);
+	polydataPoint->SetVerts(vertices);
+	vtkSmartPointer<vtkPolyDataMapper> mapperPoint = vtkPolyDataMapper::New();
+	mapperPoint->SetInputData(polydataPoint);
+	point_->SetMapper(mapperPoint);
+	point_->GetProperty()->SetColor(0.5, 0, 0);
+	point_->GetProperty()->SetPointSize(5);
+
+
+
 
 	// add the actor to the scene
 
@@ -399,7 +420,9 @@ int main() {
 	renderer->AddActor(axesY_);
 	renderer->AddActor(axesX_);
 	renderer->AddActor(axesActor_);
+	renderer->AddActor(point_);
 	renderer->SetBackground(1, 1, 1);//background color
+
 
 	vtkSmartPointer<vtkRenderWindow> renderwindow =
 		vtkSmartPointer<vtkRenderWindow>::New();
@@ -436,4 +459,6 @@ int main() {
 	renderWindowInteractor->Start();
 
 	return EXIT_SUCCESS;
+
 }
+
