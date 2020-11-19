@@ -60,7 +60,7 @@ public:
 	static MouseMovemenetStyle* New();
 	vtkTypeMacro(MouseMovemenetStyle, vtkInteractorStyleTrackballCamera);
 	bool flg = false;
-	int counter = 0;
+	int countBack = 1, countForw = 1;
 	double grid_CellX = 0.05;
 	double grid_CellY = 0.05;
 	double viewportSize[2];
@@ -102,8 +102,9 @@ public:
 	
 	virtual void OnMouseWheelBackward() {
 		vtkInteractorStyleTrackballCamera::OnMouseWheelBackward();
-		counter--;
-		if (counter % 5 == 0) {
+		countBack++;
+		if (countBack % 5 == 0) {
+			countBack = 1;
 			grid_CellX *= 2;
 		}
 		OnTimer();
@@ -111,8 +112,9 @@ public:
 	}
 	virtual void OnMouseWheelForward() {
 		vtkInteractorStyleTrackballCamera::OnMouseWheelForward();
-		counter++;
-		if (counter % 5 == 0) {
+		countForw++;
+		if (countForw % 5 == 0) {
+			countForw = 1;
 			grid_CellX /= 2;
 		}
 		OnTimer();
@@ -316,7 +318,7 @@ int main() {
 	axesActor_->GetProperty()->SetColor(0, 0, 0);
 	////
 
-	double viewportSize[2] = { 1 ,1 }, grid_CellX = 1 / 40.0;
+	double viewportSize[2] = { 1 ,1 }, grid_CellX = 1 / 20.0;
 
 	int halfLinesNum = 40;
 
@@ -434,5 +436,4 @@ int main() {
 	renderWindowInteractor->Start();
 
 	return EXIT_SUCCESS;
-
 }
