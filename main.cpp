@@ -120,7 +120,6 @@ void InitScene(int width, int height) {
 			num++;
 		}
 	}
-
 	vtkSmartPointer<vtkPolyData> polydata2 = vtkPolyData::New();
 	polydata2->SetPoints(points2);
 	polydata2->SetLines(lines2);
