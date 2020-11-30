@@ -13,6 +13,8 @@ VTK_MODULE_INIT(vtkInteractionStyle);
 #include <vtkRendererCollection.h>
 
 #include "GridStyle.h"
+#include <vtkStructuredGrid.h>
+#include "InteractionCallback.h"
 
 void InitScene(int width, int height);
 
@@ -23,15 +25,41 @@ static void CameraModifiedCallback(vtkObject* caller,
 {
 	vtkCamera* camera = static_cast<vtkCamera*>(caller);
 	camera->SetFocalPoint(camera->GetPosition()[0], camera->GetPosition()[1], 0);
+	cout << "1" << endl;
 }
 
 int main() {
+
+
+
 
 	InitScene(800, 800);
 
 	return EXIT_SUCCESS;
 }
 
+vtkSmartPointer<vtkStructuredGrid> creategrid(double grid_CellX, unsigned int gridsize, double q = 1.0) {
+	gridsize++;
+	vtkSmartPointer<vtkStructuredGrid> structuredgrid =
+		vtkSmartPointer<vtkStructuredGrid>::New();
+
+	vtkSmartPointer<vtkPoints> points =
+		vtkSmartPointer<vtkPoints>::New();
+
+	for (unsigned int j = 0; j < gridsize; j++)
+	{
+		for (unsigned int i = 0; i < gridsize; i++)
+		{
+			points->InsertNextPoint(i * q * grid_CellX, j * q * grid_CellX, 0);
+		}
+	}
+
+	structuredgrid->SetDimensions(gridsize, gridsize, 1);
+	structuredgrid->SetPoints(points);
+	structuredgrid->Modified();
+
+	return structuredgrid;
+}
 
 void InitScene(int width, int height) 
 {
@@ -65,9 +93,9 @@ void InitScene(int width, int height)
 	//// Create X lines
 
 	double viewportSize[2] = { 1 ,1 };
-	double grid_CellX = 1 / 20.0;
+	double grid_CellX = 1 / 100.0;
 
-	int halfLinesNum = 40;
+	int halfLinesNum = 400;
 
 	vtkSmartPointer<vtkPoints> points1 = vtkPoints::New();
 	points1->Allocate(2 * halfLinesNum);
@@ -142,6 +170,13 @@ void InitScene(int width, int height)
 	renderer->SetBackground(1, 1, 1);
 
 
+	vtkSmartPointer <vtkPropPicker> propPicker = vtkSmartPointer<vtkPropPicker>::New();
+
+//	propPicker->PickFromListOn();
+//	propPicker->AddPickList(axesActor_);
+//	propPicker->AddPickList(axesX_);
+//	propPicker->AddPickList(axesY_);
+
 	vtkSmartPointer<vtkRenderWindow> renderwindow =
 		vtkSmartPointer<vtkRenderWindow>::New();
 	renderwindow->AddRenderer(renderer);
@@ -161,11 +196,12 @@ void InitScene(int width, int height)
 	renderer->AutomaticLightCreationOff();
 	renderer->GradientEnvironmentalBGOff();
 	
-
+//	vtkSmartPointer<InteractionCallback> callback = vtkSmartPointer<InteractionCallback>::New();
+	callback
 	gridStyle* grid = new gridStyle(axesX_, axesY_, axesActor_, renderer);
 	vtkSmartPointer<gridStyle> style =
 		vtkSmartPointer<gridStyle>::Take(grid);
-
+	//style->AddObserver(vtkCommand::MouseMoveEvent, callback);
 	renderWindowInteractor->SetInteractorStyle(style);
 
 	// render and interact

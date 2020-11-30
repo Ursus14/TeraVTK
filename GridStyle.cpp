@@ -16,9 +16,14 @@ gridStyle::gridStyle(vtkSmartPointer<vtkActor> axesX, vtkSmartPointer<vtkActor> 
 	zPosition = camera_->GetPosition()[2];
 }
 
+void gridStyle::OnMouseMove() 
+{
+	vtkInteractorStyleTrackballCamera::OnMouseMove();
+}
+
 void gridStyle::OnLeftButtonDown()
 {
-	SetTimerDuration(5);
+	SetTimerDuration(1);
 	UseTimersOn();
 	vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
 	StartTimer();
@@ -31,6 +36,11 @@ void gridStyle::OnLeftButtonUp()
 	vtkInteractorStyleTrackballCamera::OnLeftButtonUp();
 }
 
+void gridStyle::OnRightButtonDown()
+{
+	camera_->SetPosition(camera_->GetPosition()[0], camera_->GetPosition()[1], zPosition);
+
+}
 void gridStyle::OnMouseWheelBackward()
 {
 	vtkInteractorStyleTrackballCamera::OnMouseWheelBackward();
@@ -104,9 +114,11 @@ void gridStyle::OnTimer()
 
 	double xmove = floor(camera_->GetFocalPoint()[0] / grid_CellX) * grid_CellX;
 	double ymove = floor(camera_->GetFocalPoint()[1] / grid_CellX) * grid_CellX;
-
+	
 	xmove += fmod(grid_CellX, grid_CellX);
 	ymove += fmod(grid_CellX, grid_CellX);
+	
+	// gridActor->SetPosition(xmove, ymove, 0);
 
 	axesX_->SetPosition(xmove, camera_->GetFocalPoint()[1], 0);
 	axesY_->SetPosition(camera_->GetFocalPoint()[0], ymove, 0);
@@ -177,4 +189,5 @@ void gridStyle::rebuildXlines()
 	polydata->SetLines(lines);
 	vtkPolyDataMapper::SafeDownCast(axesX_->GetMapper())->SetInputData(polydata);
 }
+
 
