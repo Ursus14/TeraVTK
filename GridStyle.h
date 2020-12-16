@@ -5,11 +5,13 @@
 #include <vtkCellArray.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
+#include <vtkDataSetMapper.h>
 #include <vtkCamera.h>
 #include <vtkPropPicker.h>
 #include <vtkRenderer.h>
 #include <vtkSetGet.h>
 #include <vtkObjectFactory.h>
+#include <vtkStructuredGrid.h>
 
 
 
@@ -20,10 +22,12 @@ public:
 	vtkTypeMacro(gridStyle, vtkInteractorStyleTrackballCamera);
 	gridStyle();
 	gridStyle(
-		vtkSmartPointer<vtkActor> axesX,
-		vtkSmartPointer<vtkActor> axesY,
+		vtkSmartPointer<vtkActor> gridActor,
 		vtkSmartPointer<vtkActor> axesMain,
 		vtkSmartPointer<vtkRenderer> renderer);
+
+public:
+	virtual void OnMouseMove();
 
 private:
 	virtual void OnLeftButtonDown();
@@ -32,7 +36,9 @@ private:
 	virtual void OnMouseWheelBackward();
 	virtual void OnMouseWheelForward();
 	virtual void OnTimer();
-	virtual void OnMouseMove();
+	
+
+	void rebuildGrid();
 	void rebuildYlines();
 	void rebuildXlines();
 
@@ -40,19 +46,23 @@ private:
 
 	bool flg = false;
 	int countBack = 1, countForw = 1;
+
 	double grid_CellX = 0.01;
 	double grid_CellY = 0.05;
 	double viewportSize[2];
+
 	int cellScreenWidth_ = 0;
+
+	double coordFocalPoint_[2];
+
 	double worldToScreenCoeff_ = 0;
 	double  lastCameraScale_ = 0;
 	bool isPaneOnly_ = false;
 	double zPosition;
 
-	vtkSmartPointer<vtkActor> axesY_;
-	vtkSmartPointer<vtkActor> axesX_;
+	vtkSmartPointer<vtkActor> gridActor_;
 	vtkSmartPointer<vtkCamera> camera_;
-	vtkSmartPointer<vtkActor> axesMain_;
+	vtkSmartPointer<vtkActor> axisesMain_;
 	vtkSmartPointer<vtkRenderer> renderer_;
 };
 
