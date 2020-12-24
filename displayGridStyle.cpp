@@ -1,69 +1,125 @@
-#include "displayGridStyle.h"
+#include "GridStyle.h"
 
-vtkStandardNewMacro(displayGridStyle);
-	
-displayGridStyle::displayGridStyle()
+vtkStandardNewMacro(gridStyle);
+
+gridStyle::gridStyle()
 {
+
 }
 
-displayGridStyle::displayGridStyle(vtkSmartPointer<vtkActor> axesX, vtkSmartPointer<vtkActor> axesY, vtkSmartPointer<vtkActor> axesMain, vtkSmartPointer<vtkCamera> camera, vtkSmartPointer<vtkRenderer> renderer)
+gridStyle::gridStyle(vtkSmartPointer<vtkActor> axesX, vtkSmartPointer<vtkActor> axesY, vtkSmartPointer<vtkActor> axesMain, vtkSmartPointer<vtkActor> actorMarker, vtkSmartPointer<vtkRenderer> renderer)
 {
 	axesX_ = axesX;
 	axesY_ = axesY;
 	axesMain_ = axesMain;
-	camera_ = camera;
+	camera_ = renderer->GetActiveCamera();
 	renderer_ = renderer;
+	actorMarker_ = actorMarker;
 	zPosition = camera_->GetPosition()[2];
 }
 
-void displayGridStyle::OnLeftButtonDown()
+void gridStyle::OnMouseMove()
 {
-	SetTimerDuration(10);
+	vtkInteractorStyleTrackballCamera::OnMouseMove();
+    double x = Interactor->GetLastEventPosition()[0];
+	double y = Interactor->GetLastEventPosition()[1];
+	int* sizeWin = Interactor->GetRenderWindow()->GetSize();
+
+	
+	if ((sizeWin[0] <= x + 3) || (x <= 3) || (sizeWin[1] <= y + 3) || (y <= 3)) {
+		actorMarker_->SetVisibility(0);
+		Interactor->GetRenderWindow()->Render();
+	}
+	else {
+	vtkSmartPointer<vtkCoordinate> coordinate =
+		vtkSmartPointer<vtkCoordinate>::New();
+	coordinate->SetCoordinateSystemToDisplay();
+	coordinate->SetValue(x, y, 0);
+	double* world = coordinate->GetComputedWorldValue(Interactor->GetRenderWindow()->GetRenderers()->GetFirstRenderer());
+	//std::cout << "World coordinate: " << world[0] << ", " << world[1] << ", " << world[2] << std::endl;
+	world[0] = floor(world[0] / grid_CellX) * grid_CellX;
+	world[1] = floor(world[1] / grid_CellX) * grid_CellX;
+	
+	
+	
+	vtkSmartPointer<vtkRegularPolygonSource> marker = vtkSmartPointer<vtkRegularPolygonSource>::New();
+	marker->SetNumberOfSides(50);
+	marker->SetRadius(0.001);
+	marker->SetCenter(world[0], world[1], 0);
+
+	vtkPolyDataMapper::SafeDownCast(actorMarker_->GetMapper())->SetInputConnection(marker->GetOutputPort());
+	actorMarker_->SetVisibility(1);
+	Interactor->GetRenderWindow()->Render();
+	}
+	
+
+}
+
+void gridStyle::OnLeftButtonDown()
+{
+	flgMouse = false;
+	SetTimerDuration(1);
 	UseTimersOn();
 	vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
 	StartTimer();
+
 }
 
-void displayGridStyle::OnLeftButtonUp()
+void gridStyle::OnLeftButtonUp()
 {
+	
 	EndTimer();
 	UseTimersOff();
 	vtkInteractorStyleTrackballCamera::OnLeftButtonUp();
+	flgMouse = true;
 }
 
-void displayGridStyle::OnMouseWheelBackward()
+void gridStyle::OnRightButtonDown()
 {
+	camera_->SetPosition(camera_->GetPosition()[0], camera_->GetPosition()[1], zPosition);
+
+}
+void gridStyle::OnMouseWheelBackward()
+{
+	flgMouse = false;
 	vtkInteractorStyleTrackballCamera::OnMouseWheelBackward();
 	zPosition = camera_->GetPosition()[2];
 
 	countBack++;
 	if (countBack % 5 == 0) {
 		countBack = 1;
+		
 		//grid_CellX *= 2;
 	}
 	OnTimer();
 	flg = true;
+	flgMouse = true;
 }
 
-void displayGridStyle::OnMouseWheelForward()
+void gridStyle::OnMouseWheelForward()
 {
+	flgMouse = false;;
 	vtkInteractorStyleTrackballCamera::OnMouseWheelForward();
 	zPosition = camera_->GetPosition()[2];
 
 	countForw++;
 	if (countForw % 5 == 0) {
 		countForw = 1;
+		
 		//grid_CellX /= 2;
 	}
 	OnTimer();
 	flg = true;
+	flgMouse = true;
 }
 
-void displayGridStyle::OnTimer()
+void gridStyle::OnTimer()
 {
-	if (camera_->GetPosition()[2] / zPosition < 0.95) {
+	if (camera_->GetPosition()[2] / zPosition < 0.99) {
 		camera_->SetPosition(camera_->GetPosition()[0], camera_->GetPosition()[1], zPosition);
 	}
+
+
 
 	int* sizes = renderer_->GetSize();
 
@@ -94,7 +150,7 @@ void displayGridStyle::OnTimer()
 	}
 
 
-	double xScale[3] = { viewportSize[0] / 2 + grid_CellX, 1, 0 };				
+	double xScale[3] = { viewportSize[0] / 2 + grid_CellX, 1, 0 };
 	axesY_->SetScale(xScale);
 
 	double yScale[3] = { 1, viewportSize[1] / 2 + grid_CellX, 0 };
@@ -106,11 +162,13 @@ void displayGridStyle::OnTimer()
 	xmove += fmod(grid_CellX, grid_CellX);
 	ymove += fmod(grid_CellX, grid_CellX);
 
+	// gridActor->SetPosition(xmove, ymove, 0);
+
 	axesX_->SetPosition(xmove, camera_->GetFocalPoint()[1], 0);
 	axesY_->SetPosition(camera_->GetFocalPoint()[0], ymove, 0);
 }
 
-void displayGridStyle::rebuildYlines()
+void gridStyle::rebuildYlines()
 {
 	const int halfLinesNum = floor((viewportSize[1] / grid_CellX) / 2) + 1;
 
@@ -143,7 +201,7 @@ void displayGridStyle::rebuildYlines()
 	vtkPolyDataMapper::SafeDownCast(axesY_->GetMapper())->SetInputData(polydata);
 }
 
-void displayGridStyle::rebuildXlines()
+void gridStyle::rebuildXlines()
 {
 	const int halfLinesNum = floor((viewportSize[0] / grid_CellX) / 2) + 1;
 
@@ -176,3 +234,7 @@ void displayGridStyle::rebuildXlines()
 	vtkPolyDataMapper::SafeDownCast(axesX_->GetMapper())->SetInputData(polydata);
 }
 
+void gridStyle::rebuildMarker(double* coordinate)
+{
+
+}
