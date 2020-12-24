@@ -16,6 +16,8 @@
 #include <vtkPointPicker.h>
 #include <vtkRendererCollection.h>
 #include <vtkRegularPolygonSource.h>
+#include <vtkPointPicker.h>
+
 #include "Grid.h"
 
 
@@ -78,6 +80,12 @@ private:
 	bool isPaneOnly_ = false;
 	double zPosition;
 	double coordinate_[2];
+
+	// Double click -----
+	unsigned int NumberOfClicks;
+	int PreviousPosition[2];
+	int ResetPixelDistance;
+	// ------------------
 
 	vtkSmartPointer<vtkCamera> camera_;
 	vtkSmartPointer<vtkActor> axesMain_;

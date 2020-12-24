@@ -17,15 +17,34 @@ GridStyleFour::GridStyleFour(
 	vtkSmartPointer<vtkCamera> camera,
 	vtkSmartPointer<vtkRenderer> renderer)
 {
+	// Grid -----
 	gridA_ = gridA;
 	gridB_ = gridB;
 	gridC_ = gridC;
 	gridD_ = gridD;
+	// ----------
 
+	// Axises -
 	axesMain_ = axesMain;
+	// -------- 
+
+	// Marker ----
 	actorMarker_ = actorMarker;
+	// -----------
+
+	// -------
 	camera_ = camera;
 	renderer_ = renderer;
+	// --------
+
+	// Double click
+	NumberOfClicks = 0;
+	ResetPixelDistance = 5;
+	PreviousPosition[0] = 0;
+	PreviousPosition[1] = 0;
+
+	// ------------
+
 	
 }
 
@@ -61,7 +80,7 @@ void GridStyleFour::OnMouseMove()
 		coordinate_[1] += 0.01;
 	}*/
 
-	std::cout << "World coordinate: " << world[0] << ", " << world[1] << std::endl;
+	
 
 	vtkInteractorStyleTrackballCamera::OnMouseMove();
 	rebuildMarker(world);
@@ -69,6 +88,34 @@ void GridStyleFour::OnMouseMove()
 
 void GridStyleFour::OnLeftButtonDown()
 {
+
+	NumberOfClicks++;
+	int pickPosition[2];
+	this->GetInteractor()->GetEventPosition(pickPosition);
+
+	int xdist = pickPosition[0] - this->PreviousPosition[0];
+	int ydist = pickPosition[1] - this->PreviousPosition[1];
+
+	cout << xdist << "     " << ydist << endl;
+
+
+	this->PreviousPosition[0] = pickPosition[0];
+	this->PreviousPosition[1] = pickPosition[1];
+
+	int moveDistance = (int)sqrt((double)(xdist * xdist + ydist * ydist));
+
+	// Reset numClicks - If mouse moved further than resetPixelDistance
+	if (moveDistance > this->ResetPixelDistance)
+	{
+		this->NumberOfClicks = 1;
+	}
+
+	if (this->NumberOfClicks == 2)
+	{
+		std::cout << "Double clicked." << std::endl;
+		this->NumberOfClicks = 0;
+	}
+
 	SetTimerDuration(1);
 	UseTimersOn();
 	vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
