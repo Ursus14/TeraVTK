@@ -1,4 +1,4 @@
-﻿
+
 #include <vtkAutoInit.h>
 
 VTK_MODULE_INIT(vtkRenderingOpenGL2);
@@ -12,8 +12,8 @@ VTK_MODULE_INIT(vtkInteractionStyle);
 #include <vtkcallbackcommand.h>
 #include <vtkCoordinate.h>
 #include <vtkRendererCollection.h>
-
 #include "GridStyle.h"
+#include "point.h"
 #include <vtkStructuredGrid.h>
 //#include "InteractionCallback.h"
 
@@ -96,7 +96,7 @@ void InitScene(int width, int height)
 
 	///		 Create Y lines			///
 	double viewportSize[2] = { 1 ,1 };
-	double grid_CellX = 1 / 100.0;
+	double grid_CellX = 1 / 10.0;
 
 	int halfLinesNum = 400;
 
@@ -176,6 +176,7 @@ void InitScene(int width, int height)
 	mapperMarker->SetInputConnection(marker->GetOutputPort());	
 	actorMarker_->SetMapper(mapperMarker);
 	actorMarker_->GetProperty()->SetColor(0.47,0.07,0.07);
+	actorMarker_->SetVisibility(0);
 	// add the actor to the scene
 
 	renderer->AddActor(axesY_);
@@ -183,14 +184,6 @@ void InitScene(int width, int height)
 	renderer->AddActor(axesActor_);
 	renderer->AddActor(actorMarker_);
 	renderer->SetBackground(1, 1, 1);
-
-
-	vtkSmartPointer <vtkPropPicker> propPicker = vtkSmartPointer<vtkPropPicker>::New();
-
-	//	propPicker->PickFromListOn();
-	//	propPicker->AddPickList(axesActor_);
-	//	propPicker->AddPickList(axesX_);
-	//	propPicker->AddPickList(axesY_);
 
 	vtkSmartPointer<vtkRenderWindow> renderwindow =
 		vtkSmartPointer<vtkRenderWindow>::New();
@@ -206,11 +199,10 @@ void InitScene(int width, int height)
 
 
 	renderer->SetActiveCamera(camera);
-	//renderer->ResetCamera();
 	renderer->GetActiveCamera()->AddObserver(vtkCommand::ModifiedEvent, modifiedcallback);
 	renderer->AutomaticLightCreationOff();
 	renderer->GradientEnvironmentalBGOff();
-
+	camera->ParallelProjectionOn();
 	//	vtkSmartPointer<InteractionCallback> callback = vtkSmartPointer<InteractionCallback>::New();
 	
 		gridStyle* grid = new gridStyle(axesX_, axesY_, axesActor_, actorMarker_, renderer);
