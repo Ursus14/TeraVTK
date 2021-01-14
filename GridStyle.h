@@ -17,6 +17,8 @@
 #include <vtkPointPicker.h>
 #include <vtkRendererCollection.h>
 #include <vtkRegularPolygonSource.h>
+#include <iostream>
+#include "point.h"
 
 
 class gridStyle : public vtkInteractorStyleTrackballCamera
@@ -40,23 +42,28 @@ private:
 	virtual void OnMouseWheelForward();
 	virtual void OnTimer();
 	virtual void OnMouseMove();
+	virtual void OnLeave();
 	void rebuildYlines();
 	void rebuildXlines();
 	void rebuildMarker(double* coordinate);
 
 private:
 
-	bool flg = false;
-	bool flgMouse = true;
+	bool flgRebuildLines = false;
 	int countBack = 1, countForw = 1;
-	double grid_CellX = 0.01;
-	double grid_CellY = 0.05;
+	double grid_CellX = 0.1;
+	double grid_CellY = 0.1;
 	double viewportSize[2];
 	int cellScreenWidth_ = 0;
 	double worldToScreenCoeff_ = 0;
 	double  lastCameraScale_ = 0;
 	bool isPaneOnly_ = false;
 	double zPosition ;
+	
+	unsigned int numPoints = 0;
+	unsigned int NumberOfClicks;
+	int PreviousPosition[2];
+	int ResetPixelDistance;
 
 	vtkSmartPointer<vtkActor> axesY_;
 	vtkSmartPointer<vtkActor> axesX_;
