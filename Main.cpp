@@ -8,6 +8,7 @@ VTK_MODULE_INIT(vtkInteractionStyle);
 #include "GridStyleFour.h"
 
 
+
 #include <vtkProperty.h>
 #include <vtkRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
@@ -47,58 +48,65 @@ void InitScene(int width, int height) {
 	vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
 	vtkSmartPointer<vtkActor> actorMarker_ = vtkSmartPointer<vtkActor>::New();
 
-	//vtkSmartPointer<vtkPoints> points = vtkPoints::New();
-	//points->Allocate(4);
-	//points->InsertNextPoint(0, -1, 0);
-	//points->InsertNextPoint(0, 1, 0);
-	//points->InsertNextPoint(-1, 0, 0);
-	//points->InsertNextPoint(1, 0, 0);
 
-	//vtkSmartPointer<vtkPolyData> polydata = vtkPolyData::New();
-	//polydata->SetPoints(points);
+	// Create axes
+	vtkSmartPointer<vtkPoints> points = vtkPoints::New();
+	points->Allocate(4);
+	points->InsertNextPoint(0, -1, 0);
+	points->InsertNextPoint(0, 1, 0);
+	points->InsertNextPoint(-1, 0, 0);
+	points->InsertNextPoint(1, 0, 0);
 
-	//vtkSmartPointer<vtkCellArray> lines = vtkCellArray::New();
-	//vtkIdType vert[2] = { 0, 1 };
-	//vtkIdType hor[2] = { 2, 3 };
-	//lines->InsertNextCell(2, vert);
-	//lines->InsertNextCell(2, hor);
-	//polydata->SetLines(lines);
+	vtkSmartPointer<vtkPolyData> polydata = vtkPolyData::New();
+	polydata->SetPoints(points);
 
-	
+	vtkSmartPointer<vtkCellArray> lines = vtkCellArray::New();
+	vtkIdType vert[2] = { 0, 1 };
+	vtkIdType hor[2] = { 2, 3 };
+	lines->InsertNextCell(2, vert);
+	lines->InsertNextCell(2, hor);
+	polydata->SetLines(lines);
+
+
+	vtkSmartPointer<vtkPolyDataMapper> axesMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+
+	axesMapper->SetInputData(polydata);
+
+	axesActor_->SetMapper(axesMapper);
+
+	axesActor_->GetProperty()->SetColor(0.0, 0.0, 0.0);
+
+
+	// -------------
 	
 
 	// create grid 
 
-	Grid* gridA = new Grid(0.0, 0.0);
+	Grid* gridA = new Grid(0.0, 0.0, 1.0);
 	for (size_t i = 0; i < gridA->size(); i++) {
 		renderer->AddActor(gridA->getActorByIndex(i));
 	}
-	Grid* gridB = new Grid(-1.0, 0.0);
+	Grid* gridB = new Grid(-1.0, 0.0, 1.0);
 	for (size_t i = 0; i < gridB->size(); i++) {
 		renderer->AddActor(gridB->getActorByIndex(i));
 	}
-	Grid* gridC = new Grid(0.0, -1.0);
+	Grid* gridC = new Grid(0.0, -1.0, 1.0);
 	for (size_t i = 0; i < gridC->size(); i++) {
 		renderer->AddActor(gridC->getActorByIndex(i));
 	}
-	cout << gridC->GetPosition()[0] << "    -------     " << gridC->GetPosition()[1] << endl;
-	
-	Grid* gridD = new Grid(-1.0, -1.0); 
+	Grid* gridD = new Grid(-1.0, -1.0, 1.0);
 	for (size_t i = 0; i < gridD->size(); i++) {
 		renderer->AddActor(gridD->getActorByIndex(i));
 	}
-	/*cout << gridA->GetPosition()[0] << "    -------     " << gridA->GetPosition()[1] << endl;
-
-	gridA->SetPosition(0.0, -1.0);
-
-	cout << gridA->GetPosition()[0] << "    -------     " << gridA->GetPosition()[1] << endl;*/
 	// ------------------------
 
+	renderer->AddActor(axesActor_);
+
+	// -------------
+	
 		
 	renderer->SetBackground(1, 1, 1);
-	cout << renderer->GetViewport()[0] << " ------ " << renderer->GetViewport()[1]  << " ------ " << renderer->GetViewport()[2] << " ------ " << renderer->GetViewport()[3] <<  endl;
-	double b = 0.65;
-	
+	double b = 1.0;
 	camera->SetPosition(0.0, 0.0, b);
 
 	// create Marker and add to renderer
@@ -143,7 +151,7 @@ void InitScene(int width, int height) {
 
 
 
-	GridStyleFour* grid = new GridStyleFour(gridA, gridB, gridC, gridD, axesActor_, actorMarker_, camera, renderer);
+	GridStyleFour* grid = new GridStyleFour(gridA, gridB, gridC, gridD, axesActor_, actorMarker_, renderer);
 	vtkSmartPointer<GridStyleFour> style =
 		vtkSmartPointer<GridStyleFour>::Take(grid);
 
@@ -152,6 +160,7 @@ void InitScene(int width, int height) {
 	// render and interact
 	renderwindow->SetSize(width, height);
 	renderwindow->Render();
+	
 
 	renderWindowInteractor->Initialize();
 	renderWindowInteractor->EnableRenderOn();

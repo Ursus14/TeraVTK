@@ -1,13 +1,13 @@
 #include "Grid.h"
 
 
-Grid::Grid(double x, double y) {
+Grid::Grid(double x, double y, double d) {
 	x_ = x;
 	y_ = y;
+	d_ = d;
 
 	init();
 }
-
 
 int Grid::size() {
 	return grid.size();
@@ -39,10 +39,10 @@ vtkSmartPointer<vtkActor> Grid::doActor(double s_x, double s_y, double x, double
 
 void Grid::doGrid(double d_x, double d_y) {
 
-	for (double i = 0; i < 0.99; i += 0.01)
+	for (double i = 0; i < d_; i += 0.01)
 	{
-		grid.push_back(doActor(0.0, 1.0, i, 0.0, d_x, d_y));
-		grid.push_back(doActor(1.0, 0.0, 0.0, i, d_x, d_y));
+		grid.push_back(doActor(0.0, d_, i, 0.0, d_x, d_y));
+		grid.push_back(doActor(d_, 0.0, 0.0, i, d_x, d_y));
 
 	}
 	
@@ -53,7 +53,7 @@ void Grid::init() {
 }
 
 double* Grid::GetPosition() {
-	return new double[2] {grid[0]->GetPosition()[0], grid[1]->GetPosition()[1]};
+	return new double[2] {grid[0]->GetPosition()[0], grid[0]->GetPosition()[1]};
 }
 
 void Grid::rebuild() {
@@ -71,6 +71,21 @@ void Grid::SetPosition(double x, double y) {
 	}
 }
 
+void Grid::SetScale(double sc) {
+	
+	for (int i = 0; i < grid.size(); i++) {
+		grid[i]->SetScale(sc);
+	}
+}
+
+double* Grid::GetScale() {
+	return grid[0]->GetScale();
+}
+
 vtkSmartPointer<vtkActor> Grid::getActorByIndex(int i) {
 	return grid[i];
+}
+
+double Grid::GetRadius() {
+	return d_;
 }

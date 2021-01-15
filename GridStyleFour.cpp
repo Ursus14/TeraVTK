@@ -6,7 +6,17 @@ vtkStandardNewMacro(GridStyleFour);
 GridStyleFour::GridStyleFour()
 {
 }
-
+/// <summary>
+/// 
+/// </summary>
+/// <param name="gridA"></param>
+/// <param name="gridB"></param>
+/// <param name="gridC"></param>
+/// <param name="gridD"></param>
+/// <param name="axesMain"></param>
+/// <param name="actorMarker"></param>
+/// <param name="camera"></param>
+/// <param name="renderer"></param>
 GridStyleFour::GridStyleFour(
 	Grid* gridA,
 	Grid* gridB,
@@ -14,9 +24,9 @@ GridStyleFour::GridStyleFour(
 	Grid* gridD,
 	vtkSmartPointer<vtkActor> axesMain,
 	vtkSmartPointer<vtkActor> actorMarker,
-	vtkSmartPointer<vtkCamera> camera,
 	vtkSmartPointer<vtkRenderer> renderer)
-{
+{	
+	
 	// Grid -----
 	gridA_ = gridA;
 	gridB_ = gridB;
@@ -33,35 +43,44 @@ GridStyleFour::GridStyleFour(
 	// -----------
 
 	// -------
-	camera_ = camera;
+	camera_ = renderer->GetActiveCamera();
 	renderer_ = renderer;
+	zPosition = camera_->GetPosition()[2];
 	// --------
+	
+	// lineSource
+	countOfPoints_ = 0;
+	//
+
 
 	// Double click
-	NumberOfClicks = 0;
+	
 	ResetPixelDistance = 5;
-	PreviousPosition[0] = 0;
-	PreviousPosition[1] = 0;
+	PreviousPositionL[0] = 0;
+	PreviousPositionL[1] = 0;
+	PreviousPositionR[0] = 0;
+	PreviousPositionR[1] = 0;
+	
+	// ------------
+
+
+	lineActor_ = vtkSmartPointer<vtkActor>::New();
+
 
 	// ------------
 
 	
 }
 
+void GridStyleFour::OnLeave() {
+	vtkInteractorStyle::OnLeave();
+	actorMarker_->SetVisibility(0);
+	Interactor->GetRenderWindow()->Render();
+}
 
 void GridStyleFour::OnMouseMove()
 {
-	double x = Interactor->GetEventPosition()[0];
-	double y = Interactor->GetEventPosition()[1];
-	
-
-	vtkSmartPointer<vtkCoordinate> coordinate =
-		vtkSmartPointer<vtkCoordinate>::New();
-	coordinate->SetCoordinateSystemToDisplay();
-	coordinate->SetValue(x, y, 0);
-	double* world = coordinate->GetComputedWorldValue(Interactor->GetRenderWindow()->GetRenderers()->GetFirstRenderer());
-
-	
+	double* world = getCurrentMousePosition();
 
 	/*if (world[0] < coordinate_[0])
 	{
@@ -79,42 +98,69 @@ void GridStyleFour::OnMouseMove()
 	{
 		coordinate_[1] += 0.01;
 	}*/
-
 	
+	rebuildMarker(world);
+	if (isAddLine) {
+		
+		buildLine(world, lineActor_);
+		
+	}
 
 	vtkInteractorStyleTrackballCamera::OnMouseMove();
-	rebuildMarker(world);
+}
+
+void GridStyleFour::OnRightButtonUp() {
+	endR_ = std::chrono::system_clock::now();
+
+}
+
+void GridStyleFour::OnRightButtonDown() {
+	startR_ = std::chrono::system_clock::now();
+
+	int pickPosition[2];
+	this->GetInteractor()->GetEventPosition(pickPosition);
+
+	if (isDoubleClickedR(pickPosition)) {
+		countOfPoints_++;
+		buildPoint(getCurrentMousePosition());
+		
+		/*if (countOfPoints_ == 5) {
+			buildBrokenLine();
+		}*/
+	}
+
+
+	this->PreviousPositionR[0] = pickPosition[0];
+	this->PreviousPositionR[1] = pickPosition[1];
+
 }
 
 void GridStyleFour::OnLeftButtonDown()
 {
-
-	NumberOfClicks++;
+	startL_ = std::chrono::system_clock::now();
+	
 	int pickPosition[2];
 	this->GetInteractor()->GetEventPosition(pickPosition);
 
-	int xdist = pickPosition[0] - this->PreviousPosition[0];
-	int ydist = pickPosition[1] - this->PreviousPosition[1];
 
-	cout << xdist << "     " << ydist << endl;
-
-
-	this->PreviousPosition[0] = pickPosition[0];
-	this->PreviousPosition[1] = pickPosition[1];
-
-	int moveDistance = (int)sqrt((double)(xdist * xdist + ydist * ydist));
-
-	// Reset numClicks - If mouse moved further than resetPixelDistance
-	if (moveDistance > this->ResetPixelDistance)
-	{
-		this->NumberOfClicks = 1;
+	
+	if (isDoubleClickedL(pickPosition)) {
+		numberOfDoubleClicks++;
+		isAddLine = true;
+		if (numberOfDoubleClicks == 2) {
+			isAddLine = false;
+			numberOfDoubleClicks = 0;
+			buildLine(getCurrentMousePosition(), vtkSmartPointer<vtkActor>::New());
+		}
+		else {
+			prevPosition = getCurrentMousePosition();
+		}
 	}
+	
 
-	if (this->NumberOfClicks == 2)
-	{
-		std::cout << "Double clicked." << std::endl;
-		this->NumberOfClicks = 0;
-	}
+	this->PreviousPositionL[0] = pickPosition[0];
+	this->PreviousPositionL[1] = pickPosition[1];
+
 
 	SetTimerDuration(1);
 	UseTimersOn();
@@ -124,46 +170,54 @@ void GridStyleFour::OnLeftButtonDown()
 
 void GridStyleFour::OnLeftButtonUp()
 {
+	endL_ = std::chrono::system_clock::now(); 
+	UseTimersOff();
 	EndTimer();
-	//UseTimersOff();
+
 	vtkInteractorStyleTrackballCamera::OnLeftButtonUp();
+}
+
+
+void GridStyleFour::rebuildGrid() {
+	
 }
 
 void GridStyleFour::OnMouseWheelBackward()
 {
 	vtkInteractorStyleTrackballCamera::OnMouseWheelBackward();
-	//zPosition = camera_->GetPosition()[2];
-	//cout << zPosition << endl;
+	zPosition = camera_->GetPosition()[2];
 	countBack++;
-	if (countBack % 5 == 0) {
+	if (countBack % 3 == 0) {
 		countBack = 1;
-		//grid_CellX *= 2;
+		rebuildGrid();
+		
 	}
-	//OnTimer();
-	//flg = true;
+	zPosition = camera_->GetPosition()[2];
+	OnTimer();
+	flg = true;
 }
 
 void GridStyleFour::OnMouseWheelForward()
 {
 	vtkInteractorStyleTrackballCamera::OnMouseWheelForward();
 	zPosition = camera_->GetPosition()[2];
-	/*cout << zPosition << endl;*/
 	countForw++;
-	if (countForw % 5 == 0) {
+	if (countForw % 3 == 0) {
 		countForw = 1;
-		//grid_CellX /= 2;
+		rebuildGrid();
 	}
-	//OnTimer();
-	//flg = true;
+	OnTimer();
+	flg = true;
 }
+
 
 void GridStyleFour::OnTimer()
 {
 	if (camera_->GetPosition()[2] / zPosition < 0.9999) {
 		camera_->SetPosition(camera_->GetPosition()[0], camera_->GetPosition()[1], zPosition);
 	}
-	rebuildGird();
-	/*int* sizes = renderer_->GetSize();
+	moveGrid();
+	int* sizes = renderer_->GetSize();
 
 	auto cameraScale = camera_->GetParallelScale();
 	lastCameraScale_ = cameraScale;
@@ -177,7 +231,7 @@ void GridStyleFour::OnTimer()
 	auto scaleY = std::abs(camera_->GetFocalPoint()[1]) + viewportSize[1] / 2.0;
 
 	double scale[3] = { scaleX, scaleY, 0 };
-	axesMain_->SetScale(scale);*/
+	axesMain_->SetScale(scale);
 	
 }
 
@@ -193,9 +247,103 @@ void GridStyleFour::rebuildMarker(double* coordinate)
 	Interactor->GetRenderWindow()->Render();
 }
 
+void GridStyleFour::buildLine(double* coordinate, vtkSmartPointer<vtkActor> lineActor) {
+	
+	vtkSmartPointer<vtkLineSource> lineSource =
+		vtkSmartPointer<vtkLineSource>::New();
+	
+	lineSource->SetPoint1(prevPosition[0], prevPosition[1], 0.0);
+	lineSource->SetPoint2(coordinate[0], coordinate[1], 0.0);
+
+	cout << " First point:     "  << prevPosition[0] << "    " << prevPosition[1] << endl;
+	cout << " Second point:     "  << coordinate[0] << "    " << coordinate[1] << endl;
+
+	vtkSmartPointer<vtkPolyDataMapper> lineMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+
+	lineMapper->SetInputConnection(lineSource->GetOutputPort());
+
+	lineActor->SetMapper(lineMapper);
+	lineActor->GetProperty()->SetColor(0.0, 0.0, 0.0);
 
 
-void GridStyleFour::rebuildGird()
+	renderer_->AddActor(lineActor);
+	Interactor->GetRenderWindow()->Render();
+
+
+}
+
+void GridStyleFour::buildBrokenLine() {
+	vtkSmartPointer<vtkLineSource> lineSource =
+		vtkSmartPointer<vtkLineSource>::New();
+
+	lineSource->SetPoints(points_);
+	
+	vtkSmartPointer<vtkPolyDataMapper> brokenLineMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+
+	brokenLineMapper->SetInputConnection(lineSource->GetOutputPort());
+
+	vtkSmartPointer<vtkActor> brokenLineActor = vtkSmartPointer<vtkActor>::New();
+	brokenLineActor->SetMapper(brokenLineMapper);
+
+	renderer_->AddActor(brokenLineActor);
+	Interactor->GetRenderWindow()->Render();
+}
+
+void GridStyleFour::buildPoint(double* coordinate) {
+	vtkSmartPointer<vtkSphereSource> point = vtkSmartPointer<vtkSphereSource>::New();
+	point->SetThetaResolution(100);
+	point->SetPhiResolution(50);
+	point->SetRadius(0.002);
+	vtkSmartPointer<vtkPolyDataMapper> pointMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+
+	pointMapper->SetInputConnection(point->GetOutputPort());
+
+	vtkSmartPointer<vtkActor> pointActor = vtkSmartPointer<vtkActor>::New();
+	pointActor->SetMapper(pointMapper);
+
+	pointActor->GetProperty()->SetColor(0.0, 0.0, 0.0);
+	pointActor->SetPosition(coordinate[0], coordinate[1], 0.0);
+
+
+	renderer_->AddActor(pointActor);
+	Interactor->GetRenderWindow()->Render();
+}
+
+bool GridStyleFour::isDoubleClickedL(int* pickPosition) {
+
+	int xdist = pickPosition[0] - this->PreviousPositionL[0];
+	int ydist = pickPosition[1] - this->PreviousPositionL[1];
+
+	std::chrono::duration<double> elapsed_seconds = endL_ - startL_;
+	int moveDistance = (double)(xdist * xdist + ydist * ydist);
+	bool flag = false;
+	if (moveDistance < (this->ResetPixelDistance)^2 && abs(elapsed_seconds.count()) < 0.14)
+	{
+		std::cout << "Double clicked on left." << std::endl;
+		flag = true;
+	}
+	return flag;
+}
+
+
+bool GridStyleFour::isDoubleClickedR(int* pickPosition) {
+
+	int xdist = pickPosition[0] - this->PreviousPositionR[0];
+	int ydist = pickPosition[1] - this->PreviousPositionR[1];
+
+	std::chrono::duration<double> elapsed_seconds = endR_ - startR_;
+	int moveDistance = (double)(xdist * xdist + ydist * ydist);
+	bool flag = false;
+	if (moveDistance < (this->ResetPixelDistance)^2 && abs(elapsed_seconds.count()) < 0.14)
+	{
+		std::cout << "Double clicked on right." << std::endl;
+		flag = true;
+	}
+	return flag;
+}
+
+
+void GridStyleFour::moveGrid()
 {
 	double xCam = camera_->GetPosition()[0];
 	double yCam = camera_->GetPosition()[1];
@@ -229,16 +377,16 @@ void GridStyleFour::rebuildGird()
 
 
 		else if (abs((yB + 1.0) - (yCam + 0.16)) < 0.20 && abs(xB - (xCam - 0.16)) >= 0.20 && abs((xD + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridA_, gridC_, 2.0);
+			moveTwoGridByY(gridA_, gridC_, 2.0);
 		} 
 		else if (abs((xD + 1.0) - (xCam + 0.16)) < 0.20 && abs((yD + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yC - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridB_, gridA_, 2.0);
+			moveTwoGridByX(gridB_, gridA_, 2.0);
 		}
 		else if (abs(yA-(yCam - 0.16))<0.20 && abs(xA- (xCam - 0.16)) >= 0.20 && abs((xC+1.0) - (xCam+0.16))>=0.20) {
-			moveTwoActorsByY(gridB_, gridD_, -2.0);
+			moveTwoGridByY(gridB_, gridD_, -2.0);
 		} 
 		else if (abs(xB - (xCam - 0.16)) < 0.20 && abs((yB + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yA - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridD_, gridC_, -2.0);
+			moveTwoGridByX(gridD_, gridC_, -2.0);
 		}
 	} 
 	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 2) {
@@ -258,16 +406,16 @@ void GridStyleFour::rebuildGird()
 
 
 		else if (abs((yC + 1.0) - (yCam + 0.16)) < 0.20 && abs(xC - (xCam - 0.16)) >= 0.20 && abs((xD + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridA_, gridB_, 2.0);
+			moveTwoGridByY(gridA_, gridB_, 2.0);
 		}
 		else if (abs((xD + 1.0) - (xCam + 0.16)) < 0.20 && abs((yD + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yB - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridC_, gridA_, 2.0);
+			moveTwoGridByX(gridC_, gridA_, 2.0);
 		}
 		else if (abs(yA - (yCam - 0.16)) < 0.20 && abs(xA - (xCam - 0.16)) >= 0.20 && abs((xB + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridC_, gridD_, -2.0);
+			moveTwoGridByY(gridC_, gridD_, -2.0);
 		}
 		else if (abs(xC - (xCam - 0.16)) < 0.20 && abs((yC + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yA - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridD_, gridB_, -2.0);
+			moveTwoGridByX(gridD_, gridB_, -2.0);
 		}
 	} 
 
@@ -288,16 +436,16 @@ void GridStyleFour::rebuildGird()
 
 
 		else if (abs((yD + 1.0) - (yCam + 0.16)) < 0.20 && abs(xD - (xCam - 0.16)) >= 0.20 && abs((xC + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridA_, gridB_, 2.0);
+			moveTwoGridByY(gridA_, gridB_, 2.0);
 		}
 		else if (abs((xC + 1.0) - (xCam + 0.16)) < 0.20 && abs((yC + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yB - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridD_, gridA_, 2.0);
+			moveTwoGridByX(gridD_, gridA_, 2.0);
 		}
 		else if (abs(yA - (yCam - 0.16)) < 0.20 && abs(xA - (xCam - 0.16)) >= 0.20 && abs((xB + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridD_, gridC_, -2.0);
+			moveTwoGridByY(gridD_, gridC_, -2.0);
 		}
 		else if (abs(xD - (xCam - 0.16)) < 0.20 && abs((yD + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yA - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridC_, gridB_, -2.0);
+			moveTwoGridByX(gridC_, gridB_, -2.0);
 		}
 	}
 	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 4) {
@@ -317,16 +465,16 @@ void GridStyleFour::rebuildGird()
 
 
 		else if (abs((yB + 1.0) - (yCam + 0.16)) < 0.20 && abs(xB - (xCam - 0.16)) >= 0.20 && abs((xC + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridA_, gridD_, 2.0);
+			moveTwoGridByY(gridA_, gridD_, 2.0);
 		}
 		else if (abs((xC + 1.0) - (xCam + 0.16)) < 0.20 && abs((yC + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yD - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridB_, gridA_, 2.0);
+			moveTwoGridByX(gridB_, gridA_, 2.0);
 		}
 		else if (abs(yA - (yCam - 0.16)) < 0.20 && abs(xA - (xCam - 0.16)) >= 0.20 && abs((xD + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridB_, gridC_, -2.0);
+			moveTwoGridByY(gridB_, gridC_, -2.0);
 		}
 		else if (abs(xB - (xCam - 0.16)) < 0.20 && abs((yB + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yA - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridC_, gridD_, -2.0);
+			moveTwoGridByX(gridC_, gridD_, -2.0);
 		}
 	}
 	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 5) {
@@ -346,16 +494,16 @@ void GridStyleFour::rebuildGird()
 
 
 		else if (abs((yC + 1.0) - (yCam + 0.16)) < 0.20 && abs(xC - (xCam - 0.16)) >= 0.20 && abs((xB + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridA_, gridD_, 2.0);
+			moveTwoGridByY(gridA_, gridD_, 2.0);
 		}
 		else if (abs((xB + 1.0) - (xCam + 0.16)) < 0.20 && abs((yB + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yD - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridC_, gridA_, 2.0);
+			moveTwoGridByX(gridC_, gridA_, 2.0);
 		}
 		else if (abs(yA - (yCam - 0.16)) < 0.20 && abs(xA - (xCam - 0.16)) >= 0.20 && abs((xD + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridC_, gridB_, -2.0);
+			moveTwoGridByY(gridC_, gridB_, -2.0);
 		}
 		else if (abs(xC - (xCam - 0.16)) < 0.20 && abs((yC + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yA - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridB_, gridD_, -2.0);
+			moveTwoGridByX(gridB_, gridD_, -2.0);
 		}
 	}
 	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 6) {
@@ -375,16 +523,16 @@ void GridStyleFour::rebuildGird()
 
 
 	else if (abs((yD + 1.0) - (yCam + 0.16)) < 0.20 && abs(xD - (xCam - 0.16)) >= 0.20 && abs((xB + 1.0) - (xCam + 0.16)) >= 0.20) {
-		moveTwoActorsByY(gridA_, gridC_, 2.0);
+		moveTwoGridByY(gridA_, gridC_, 2.0);
 	}
 	else if (abs((xB + 1.0) - (xCam + 0.16)) < 0.20 && abs((yB + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yC - (yCam - 0.16)) >= 0.20) {
-		moveTwoActorsByX(gridD_, gridA_, 2.0);
+		moveTwoGridByX(gridD_, gridA_, 2.0);
 	}
 	else if (abs(yA - (yCam - 0.16)) < 0.20 && abs(xA - (xCam - 0.16)) >= 0.20 && abs((xC + 1.0) - (xCam + 0.16)) >= 0.20) {
-		moveTwoActorsByY(gridD_, gridB_, -2.0);
+		moveTwoGridByY(gridD_, gridB_, -2.0);
 	}
 	else if (abs(xD - (xCam - 0.16)) < 0.20 && abs((yD + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yA - (yCam - 0.16)) >= 0.20) {
-		moveTwoActorsByX(gridB_, gridC_, -2.0);
+		moveTwoGridByX(gridB_, gridC_, -2.0);
 	}
 	}
 	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 7) {
@@ -404,16 +552,16 @@ void GridStyleFour::rebuildGird()
 
 
 		else if (abs((yA + 1.0) - (yCam + 0.16)) < 0.20 && abs(xA - (xCam - 0.16)) >= 0.20 && abs((xB + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridC_, gridD_, 2.0);
+			moveTwoGridByY(gridC_, gridD_, 2.0);
 		}
 		else if (abs((xB + 1.0) - (xCam + 0.16)) < 0.20 && abs((yB + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yD - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridA_, gridC_, 2.0);
+			moveTwoGridByX(gridA_, gridC_, 2.0);
 		}
 		else if (abs(yC - (yCam - 0.16)) < 0.20 && abs(xC - (xCam - 0.16)) >= 0.20 && abs((xD + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridA_, gridB_, -2.0);
+			moveTwoGridByY(gridA_, gridB_, -2.0);
 		}
 		else if (abs(xA - (xCam - 0.16)) < 0.20 && abs((yA + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yC - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridB_, gridD_, -2.0);
+			moveTwoGridByX(gridB_, gridD_, -2.0);
 		}
 	}
 	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 8) {
@@ -433,16 +581,16 @@ void GridStyleFour::rebuildGird()
 
 
 		else if (abs((yA + 1.0) - (yCam + 0.16)) < 0.20 && abs(xA - (xCam - 0.16)) >= 0.20 && abs((xC + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridB_, gridD_, 2.0);
+			moveTwoGridByY(gridB_, gridD_, 2.0);
 		}
 		else if (abs((xC + 1.0) - (xCam + 0.16)) < 0.20 && abs((yC + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yD - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridA_, gridB_, 2.0);
+			moveTwoGridByX(gridA_, gridB_, 2.0);
 		}
 		else if (abs(yB - (yCam - 0.16)) < 0.20 && abs(xB - (xCam - 0.16)) >= 0.20 && abs((xD + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridA_, gridC_, -2.0);
+			moveTwoGridByY(gridA_, gridC_, -2.0);
 		}
 		else if (abs(xA - (xCam - 0.16)) < 0.20 && abs((yA + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yB - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridC_, gridD_, -2.0);
+			moveTwoGridByX(gridC_, gridD_, -2.0);
 		}
 	}
 	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 9) {
@@ -462,16 +610,16 @@ void GridStyleFour::rebuildGird()
 
 
 		else if (abs((yA + 1.0) - (yCam + 0.16)) < 0.20 && abs(xA - (xCam - 0.16)) >= 0.20 && abs((xD + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridB_, gridC_, 2.0);
+			moveTwoGridByY(gridB_, gridC_, 2.0);
 		}
 		else if (abs((xD + 1.0) - (xCam + 0.16)) < 0.20 && abs((yD + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yC - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridA_, gridB_, 2.0);
+			moveTwoGridByX(gridA_, gridB_, 2.0);
 		}
 		else if (abs(yB - (yCam - 0.16)) < 0.20 && abs(xB - (xCam - 0.16)) >= 0.20 && abs((xC + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridA_, gridD_, -2.0);
+			moveTwoGridByY(gridA_, gridD_, -2.0);
 		}
 		else if (abs(xA - (xCam - 0.16)) < 0.20 && abs((yA + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yB - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridD_, gridC_, -2.0);
+			moveTwoGridByX(gridD_, gridC_, -2.0);
 		}
 
 	}
@@ -492,16 +640,16 @@ void GridStyleFour::rebuildGird()
 
 
 		else if (abs((yA + 1.0) - (yCam + 0.16)) < 0.20 && abs(xA - (xCam - 0.16)) >= 0.20 && abs((xB + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridD_, gridC_, 2.0);
+			moveTwoGridByY(gridD_, gridC_, 2.0);
 		}
 		else if (abs((xB + 1.0) - (xCam + 0.16)) < 0.20 && abs((yB + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yC - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridA_, gridD_, 2.0);
+			moveTwoGridByX(gridA_, gridD_, 2.0);
 		}
 		else if (abs(yD - (yCam - 0.16)) < 0.20 && abs(xD - (xCam - 0.16)) >= 0.20 && abs((xC + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridA_, gridB_, -2.0);
+			moveTwoGridByY(gridA_, gridB_, -2.0);
 		}
 		else if (abs(xA - (xCam - 0.16)) < 0.20 && abs((yA + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yD - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridB_, gridC_, -2.0);
+			moveTwoGridByX(gridB_, gridC_, -2.0);
 		}
 
 	}
@@ -522,16 +670,16 @@ void GridStyleFour::rebuildGird()
 
 
 		else if (abs((yA + 1.0) - (yCam + 0.16)) < 0.20 && abs(xA - (xCam - 0.16)) >= 0.20 && abs((xD + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridC_, gridB_, 2.0);
+			moveTwoGridByY(gridC_, gridB_, 2.0);
 		}
 		else if (abs((xD + 1.0) - (xCam + 0.16)) < 0.20 && abs((yD + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yB - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridA_, gridC_, 2.0);
+			moveTwoGridByX(gridA_, gridC_, 2.0);
 		}
 		else if (abs(yC - (yCam - 0.16)) < 0.20 && abs(xC - (xCam - 0.16)) >= 0.20 && abs((xB + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridA_, gridD_, -2.0);
+			moveTwoGridByY(gridA_, gridD_, -2.0);
 		}
 		else if (abs(xA - (xCam - 0.16)) < 0.20 && abs((yA + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yC - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridD_, gridB_, -2.0);
+			moveTwoGridByX(gridD_, gridB_, -2.0);
 		}
 	}
 	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 12) {
@@ -551,16 +699,16 @@ void GridStyleFour::rebuildGird()
 
 
 		else if (abs((yA + 1.0) - (yCam + 0.16)) < 0.20 && abs(xA - (xCam - 0.16)) >= 0.20 && abs((xC + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridD_, gridB_, 2.0);
+			moveTwoGridByY(gridD_, gridB_, 2.0);
 		}
 		else if (abs((xC + 1.0) - (xCam + 0.16)) < 0.20 && abs((yC + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yB - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridA_, gridD_, 2.0);
+			moveTwoGridByX(gridA_, gridD_, 2.0);
 		}
 		else if (abs(yD - (yCam - 0.16)) < 0.20 && abs(xD - (xCam - 0.16)) >= 0.20 && abs((xB + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridA_, gridC_, -2.0);
+			moveTwoGridByY(gridA_, gridC_, -2.0);
 		}
 		else if (abs(xA - (xCam - 0.16)) < 0.20 && abs((yA + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yD - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridC_, gridB_, -2.0);
+			moveTwoGridByX(gridC_, gridB_, -2.0);
 		}
 	}
 	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 13) {
@@ -580,16 +728,16 @@ void GridStyleFour::rebuildGird()
 
 
 		else if (abs((yB + 1.0) - (yCam + 0.16)) < 0.20 && abs(xB - (xCam - 0.16)) >= 0.20 && abs((xA + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridD_, gridC_, 2.0);
+			moveTwoGridByY(gridD_, gridC_, 2.0);
 		}
 		else if (abs((xA + 1.0) - (xCam + 0.16)) < 0.20 && abs((yA + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yC - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridB_, gridD_, 2.0);
+			moveTwoGridByX(gridB_, gridD_, 2.0);
 		}
 		else if (abs(yD - (yCam - 0.16)) < 0.20 && abs(xD - (xCam - 0.16)) >= 0.20 && abs((xC + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridB_, gridA_, -2.0);
+			moveTwoGridByY(gridB_, gridA_, -2.0);
 		}
 		else if (abs(xB - (xCam - 0.16)) < 0.20 && abs((yB + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yD - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridA_, gridC_, -2.0);
+			moveTwoGridByX(gridA_, gridC_, -2.0);
 		}
 	}
 	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 14) {
@@ -609,16 +757,16 @@ void GridStyleFour::rebuildGird()
 
 
 		else if (abs((yC + 1.0) - (yCam + 0.16)) < 0.20 && abs(xC - (xCam - 0.16)) >= 0.20 && abs((xA + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridD_, gridB_, 2.0);
+			moveTwoGridByY(gridD_, gridB_, 2.0);
 		}
 		else if (abs((xA + 1.0) - (xCam + 0.16)) < 0.20 && abs((yA + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yB - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridC_, gridD_, 2.0);
+			moveTwoGridByX(gridC_, gridD_, 2.0);
 		}
 		else if (abs(yD - (yCam - 0.16)) < 0.20 && abs(xD - (xCam - 0.16)) >= 0.20 && abs((xB + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridC_, gridA_, -2.0);
+			moveTwoGridByY(gridC_, gridA_, -2.0);
 		}
 		else if (abs(xC - (xCam - 0.16)) < 0.20 && abs((yC + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yD - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridA_, gridB_, -2.0);
+			moveTwoGridByX(gridA_, gridB_, -2.0);
 		}
 	}
 	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 15) {
@@ -638,16 +786,16 @@ void GridStyleFour::rebuildGird()
 
 
 		else if (abs((yD + 1.0) - (yCam + 0.16)) < 0.20 && abs(xD - (xCam - 0.16)) >= 0.20 && abs((xA + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridB_, gridC_, 2.0);
+			moveTwoGridByY(gridB_, gridC_, 2.0);
 		}
 		else if (abs((xA + 1.0) - (xCam + 0.16)) < 0.20 && abs((yA + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yC - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridD_, gridB_, 2.0);
+			moveTwoGridByX(gridD_, gridB_, 2.0);
 		}
 		else if (abs(yB - (yCam - 0.16)) < 0.20 && abs(xB - (xCam - 0.16)) >= 0.20 && abs((xC + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridD_, gridA_, -2.0);
+			moveTwoGridByY(gridD_, gridA_, -2.0);
 		}
 		else if (abs(xD - (xCam - 0.16)) < 0.20 && abs((yD + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yB - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridA_, gridC_, -2.0);
+			moveTwoGridByX(gridA_, gridC_, -2.0);
 		}
 	}
 	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 16) {
@@ -667,16 +815,16 @@ void GridStyleFour::rebuildGird()
 
 
 		else if (abs((yC + 1.0) - (yCam + 0.16)) < 0.20 && abs(xC - (xCam - 0.16)) >= 0.20 && abs((xA + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridB_, gridD_, 2.0);
+			moveTwoGridByY(gridB_, gridD_, 2.0);
 		}
 		else if (abs((xA + 1.0) - (xCam + 0.16)) < 0.20 && abs((yA + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yD - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridC_, gridB_, 2.0);
+			moveTwoGridByX(gridC_, gridB_, 2.0);
 		}
 		else if (abs(yB - (yCam - 0.16)) < 0.20 && abs(xB - (xCam - 0.16)) >= 0.20 && abs((xD + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridC_, gridA_, -2.0);
+			moveTwoGridByY(gridC_, gridA_, -2.0);
 		}
 		else if (abs(xC - (xCam - 0.16)) < 0.20 && abs((yC + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yB - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridA_, gridD_, -2.0);
+			moveTwoGridByX(gridA_, gridD_, -2.0);
 		}
 	}
 	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 17) {
@@ -696,16 +844,16 @@ void GridStyleFour::rebuildGird()
 
 
 		else if (abs((yD + 1.0) - (yCam + 0.16)) < 0.20 && abs(xD - (xCam - 0.16)) >= 0.20 && abs((xA + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridC_, gridB_, 2.0);
+			moveTwoGridByY(gridC_, gridB_, 2.0);
 		}
 		else if (abs((xA + 1.0) - (xCam + 0.16)) < 0.20 && abs((yA + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yB - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridD_, gridC_, 2.0);
+			moveTwoGridByX(gridD_, gridC_, 2.0);
 		}
 		else if (abs(yC - (yCam - 0.16)) < 0.20 && abs(xC - (xCam - 0.16)) >= 0.20 && abs((xB + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridD_, gridA_, -2.0);
+			moveTwoGridByY(gridD_, gridA_, -2.0);
 		}
 		else if (abs(xD - (xCam - 0.16)) < 0.20 && abs((yD + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yC - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridA_, gridB_, -2.0);
+			moveTwoGridByX(gridA_, gridB_, -2.0);
 		}
 	}
 	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 18) {
@@ -725,16 +873,16 @@ void GridStyleFour::rebuildGird()
 
 
 		else if (abs((yB + 1.0) - (yCam + 0.16)) < 0.20 && abs(xB - (xCam - 0.16)) >= 0.20 && abs((xA + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridC_, gridD_, 2.0);
+			moveTwoGridByY(gridC_, gridD_, 2.0);
 		}
 		else if (abs((xA + 1.0) - (xCam + 0.16)) < 0.20 && abs((yA + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yD - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridB_, gridC_, 2.0);
+			moveTwoGridByX(gridB_, gridC_, 2.0);
 		}
 		else if (abs(yC - (yCam - 0.16)) < 0.20 && abs(xC - (xCam - 0.16)) >= 0.20 && abs((xD + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridB_, gridA_, -2.0);
+			moveTwoGridByY(gridB_, gridA_, -2.0);
 		}
 		else if (abs(xB - (xCam - 0.16)) < 0.20 && abs((yB + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yC - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridA_, gridD_, -2.0);
+			moveTwoGridByX(gridA_, gridD_, -2.0);
 		}
 	}
 	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 19) {
@@ -754,16 +902,16 @@ void GridStyleFour::rebuildGird()
 
 
 		else if (abs((yD + 1.0) - (yCam + 0.16)) < 0.20 && abs(xD - (xCam - 0.16)) >= 0.20 && abs((xC + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridB_, gridA_, 2.0);
+			moveTwoGridByY(gridB_, gridA_, 2.0);
 		}
 		else if (abs((xC + 1.0) - (xCam + 0.16)) < 0.20 && abs((yC + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yA - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridD_, gridB_, 2.0);
+			moveTwoGridByX(gridD_, gridB_, 2.0);
 		}
 		else if (abs(yB - (yCam - 0.16)) < 0.20 && abs(xB - (xCam - 0.16)) >= 0.20 && abs((xA + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridD_, gridC_, -2.0);
+			moveTwoGridByY(gridD_, gridC_, -2.0);
 		}
 		else if (abs(xD - (xCam - 0.16)) < 0.20 && abs((yD + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yB - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridC_, gridA_, -2.0);
+			moveTwoGridByX(gridC_, gridA_, -2.0);
 		}
 	}
 	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 20) {
@@ -782,16 +930,16 @@ void GridStyleFour::rebuildGird()
 
 
 		else if (abs((yD + 1.0) - (yCam + 0.16)) < 0.20 && abs(xD - (xCam - 0.16)) >= 0.20 && abs((xB + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridC_, gridA_, 2.0);
+			moveTwoGridByY(gridC_, gridA_, 2.0);
 		}
 		else if (abs((xB + 1.0) - (xCam + 0.16)) < 0.20 && abs((yB + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yA - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridD_, gridC_, 2.0);
+			moveTwoGridByX(gridD_, gridC_, 2.0);
 		}
 		else if (abs(yC - (yCam - 0.16)) < 0.20 && abs(xC - (xCam - 0.16)) >= 0.20 && abs((xA + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridD_, gridB_, -2.0);
+			moveTwoGridByY(gridD_, gridB_, -2.0);
 		}
 		else if (abs(xD - (xCam - 0.16)) < 0.20 && abs((yD + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yC - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridB_, gridA_, -2.0);
+			moveTwoGridByX(gridB_, gridA_, -2.0);
 		}
 	}
 	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 21) {
@@ -811,16 +959,16 @@ void GridStyleFour::rebuildGird()
 
 
 		else if (abs((yC + 1.0) - (yCam + 0.16)) < 0.20 && abs(xC - (xCam - 0.16)) >= 0.20 && abs((xB + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridD_, gridA_, 2.0);
+			moveTwoGridByY(gridD_, gridA_, 2.0);
 		}
 		else if (abs((xB + 1.0) - (xCam + 0.16)) < 0.20 && abs((yB + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yA - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridC_, gridD_, 2.0);
+			moveTwoGridByX(gridC_, gridD_, 2.0);
 		}
 		else if (abs(yD - (yCam - 0.16)) < 0.20 && abs(xD - (xCam - 0.16)) >= 0.20 && abs((xA + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridC_, gridB_, -2.0);
+			moveTwoGridByY(gridC_, gridB_, -2.0);
 		}
 		else if (abs(xC - (xCam - 0.16)) < 0.20 && abs((yC + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yD - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridB_, gridA_, -2.0);
+			moveTwoGridByX(gridB_, gridA_, -2.0);
 		}
 	}
 	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 22) {
@@ -840,16 +988,16 @@ void GridStyleFour::rebuildGird()
 
 
 		else if (abs((yC + 1.0) - (yCam + 0.16)) < 0.20 && abs(xC - (xCam - 0.16)) >= 0.20 && abs((xD + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridB_, gridA_, 2.0);
+			moveTwoGridByY(gridB_, gridA_, 2.0);
 		}
 		else if (abs((xD + 1.0) - (xCam + 0.16)) < 0.20 && abs((yD + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yA - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridC_, gridB_, 2.0);
+			moveTwoGridByX(gridC_, gridB_, 2.0);
 		}
 		else if (abs(yB - (yCam - 0.16)) < 0.20 && abs(xB - (xCam - 0.16)) >= 0.20 && abs((xA + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridC_, gridD_, -2.0);
+			moveTwoGridByY(gridC_, gridD_, -2.0);
 		}
 		else if (abs(xC - (xCam - 0.16)) < 0.20 && abs((yC + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yB - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridD_, gridA_, -2.0);
+			moveTwoGridByX(gridD_, gridA_, -2.0);
 		}
 	}
 	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 23) {
@@ -869,16 +1017,16 @@ void GridStyleFour::rebuildGird()
 
 
 		else if (abs((yB + 1.0) - (yCam + 0.16)) < 0.20 && abs(xB - (xCam - 0.16)) >= 0.20 && abs((xC + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridD_, gridA_, 2.0);
+			moveTwoGridByY(gridD_, gridA_, 2.0);
 		}
 		else if (abs((xC + 1.0) - (xCam + 0.16)) < 0.20 && abs((yC + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yA - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridB_, gridD_, 2.0);
+			moveTwoGridByX(gridB_, gridD_, 2.0);
 		}
 		else if (abs(yD - (yCam - 0.16)) < 0.20 && abs(xD - (xCam - 0.16)) >= 0.20 && abs((xA + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridB_, gridC_, -2.0);
+			moveTwoGridByY(gridB_, gridC_, -2.0);
 		}
 		else if (abs(xB - (xCam - 0.16)) < 0.20 && abs((yB + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yD - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridC_, gridA_, -2.0);
+			moveTwoGridByX(gridC_, gridA_, -2.0);
 		}
 	}
 	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 24) {
@@ -898,345 +1046,20 @@ void GridStyleFour::rebuildGird()
 
 
 		else if (abs((yB + 1.0) - (yCam + 0.16)) < 0.20 && abs(xB - (xCam - 0.16)) >= 0.20 && abs((xD + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridC_, gridA_, 2.0);
+			moveTwoGridByY(gridC_, gridA_, 2.0);
 		}
 		else if (abs((xD + 1.0) - (xCam + 0.16)) < 0.20 && abs((yD + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yA - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridB_, gridC_, 2.0);
+			moveTwoGridByX(gridB_, gridC_, 2.0);
 		}
 		else if (abs(yC - (yCam - 0.16)) < 0.20 && abs(xC - (xCam - 0.16)) >= 0.20 && abs((xA + 1.0) - (xCam + 0.16)) >= 0.20) {
-			moveTwoActorsByY(gridB_, gridD_, -2.0);
+			moveTwoGridByY(gridB_, gridD_, -2.0);
 		}
 		else if (abs(xB - (xCam - 0.16)) < 0.20 && abs((yB + 1.0) - (yCam + 0.16)) >= 0.20 && abs(yC - (yCam - 0.16)) >= 0.20) {
-			moveTwoActorsByX(gridD_, gridA_, -2.0);
+			moveTwoGridByX(gridD_, gridA_, -2.0);
 		}
 	}
 
-	//if (isPresentInOne(gridA_)) {
-	//	cout << "1" << endl;
-	//	if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 1 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 2) {
-	//		
-	//		//moveToSouthWest(gridB_, gridD_, gridC_);
-	//	} 
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 3 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 4) {
-	//		//moveToSouthWest(gridB_, gridC_, gridD_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 5 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 6) {
-	//		//moveToSouthWest(gridC_, gridB_, gridD_); 
-	//	}
-
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 7 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 8) {
-	//		//moveToNorthWest(gridB_, gridD_, gridC_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 9 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 10) {
-	//		//moveToNorthWest(gridB_, gridC_, gridD_);
-	//	} 
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 11 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 12) {
-	//		//moveToNorthWest(gridC_, gridB_, gridD_);
-	//	}
-
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 13 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 14) {
-	//		double xCam = camera_->GetPosition()[0];
-	//		double yCam = camera_->GetPosition()[1];
-
-	//		double xA = gridA_->GetPosition()[0];
-	//		double yA = gridA_->GetPosition()[1];
-	//		cout << "13" << endl;
-	//		if (abs((xA + 1.0) - (xCam + 0.16)) < 0.2 && abs((yA + 1.0) - (yCam + 0.16)) < 0.2) {
-	//			//cout << "13" << endl;
-	//			moveToNorthEast(gridC_, gridD_, gridB_);
-	//		}
-
-	//		
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 15 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 16) {
-	//		double xCam = camera_->GetPosition()[0];
-	//		double yCam = camera_->GetPosition()[1];
-
-	//		double xA = gridA_->GetPosition()[0];
-	//		double yA = gridA_->GetPosition()[1];
-	//		cout << "15" << endl;
-	//		if (abs((xA + 1.0) - (xCam + 0.16)) < 0.2 && abs((yA + 1.0) - (yCam + 0.16)) < 0.2) {
-	//			//cout << "15" << endl;
-	//			moveToNorthEast(gridC_, gridD_, gridB_);
-	//		}
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 17 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 18) {
-	//		double xCam = camera_->GetPosition()[0];
-	//		double yCam = camera_->GetPosition()[1];
-
-	//		double xA = gridA_->GetPosition()[0];
-	//		double yA = gridA_->GetPosition()[1];
-	//		cout << "16" << endl;
-	//		if (abs((xA + 1.0) - (xCam + 0.16)) < 0.2 && abs((yA + 1.0) - (yCam + 0.16)) < 0.2) {
-	//			//cout << "16" << endl;
-	//			moveToNorthEast(gridC_, gridD_, gridB_);
-	//		}
-	//	}
-
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 19 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 20) {
-	//		//moveToSouthEast(gridB_, gridD_, gridC_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 21 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 22) {
-	//		//moveToSouthEast(gridB_, gridC_, gridD_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 23 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 24) {
-	//		//moveToSouthEast(gridD_, gridB_, gridC_);
-	//	}
-
-	//}
-
-	//else if (isPresentInOne(gridB_)) {
-	//	if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 1 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 2) {
-	//		moveToSouthWest(gridA_, gridD_, gridC_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 3 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 4) {
-	//		moveToSouthWest(gridA_, gridC_, gridD_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 5 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 6) {
-	//		moveToSouthWest(gridC_, gridA_, gridD_);
-	//	}
-
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 7 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 8) {
-	//		moveToNorthWest(gridA_, gridD_, gridC_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 9 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 10) {
-	//		moveToNorthWest(gridA_, gridC_, gridD_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 11 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 12) {
-	//		moveToNorthWest(gridC_, gridA_, gridD_);
-	//	}
-
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 13 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 14) {
-	//		moveToNorthEast(gridC_, gridD_, gridA_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 15 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 16) {
-	//		moveToNorthEast(gridC_, gridA_, gridD_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 17 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 18) {
-	//		moveToNorthEast(gridA_, gridC_, gridD_);
-	//	}
-
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 19 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 20) {
-	//		moveToSouthEast(gridA_, gridD_, gridC_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 21 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 22) {
-	//		moveToSouthEast(gridA_, gridC_, gridD_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 23 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 24) {
-	//		moveToSouthEast(gridD_, gridA_, gridC_);
-	//	}
-	//}
-
-	//else if (isPresentInOne(gridC_)) {
-	//	if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 1 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 2) {
-	//		moveToSouthWest(gridB_, gridD_, gridA_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 3 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 4) {
-	//		moveToSouthWest(gridB_, gridA_, gridD_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 5 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 6) {
-	//		moveToSouthWest(gridA_, gridB_, gridD_);
-	//	}
-
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 7 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 8) {
-	//		moveToNorthWest(gridB_, gridD_, gridA_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 9 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 10) {
-	//		moveToNorthWest(gridB_, gridA_, gridD_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 11 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 12) {
-	//		moveToNorthWest(gridA_, gridB_, gridD_);
-	//	}
-
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 13 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 14) {
-	//		moveToNorthEast(gridA_, gridD_, gridB_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 15 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 16) {
-	//		moveToNorthEast(gridA_, gridB_, gridD_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 17 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 18) {
-	//		moveToNorthEast(gridB_, gridA_, gridD_);
-	//	}
-
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 19 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 20) {
-	//		moveToSouthEast(gridB_, gridD_, gridA_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 21 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 22) {
-	//		moveToSouthEast(gridB_, gridA_, gridD_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 23 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 24) {
-	//		moveToSouthEast(gridD_, gridB_, gridA_);
-	//	}
-	//}
-	//
-	//else if (isPresentInOne(gridD_)) {
-	//	if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 1 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 2) {
-	//		moveToSouthWest(gridB_, gridA_, gridC_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 3 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 4) {
-	//		moveToSouthWest(gridB_, gridC_, gridA_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 5 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 6) {
-	//		moveToSouthWest(gridC_, gridB_, gridA_);
-	//	}
-
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 7 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 8) {
-	//		moveToNorthWest(gridB_, gridA_, gridC_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 9 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 10) {
-	//		moveToNorthWest(gridB_, gridC_, gridA_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 11 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 12) {
-	//		moveToNorthWest(gridC_, gridB_, gridA_);
-	//	}
-
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 13 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 14) {
-	//		moveToNorthEast(gridC_, gridA_, gridB_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 15 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 16) {
-	//		moveToNorthEast(gridC_, gridB_, gridA_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 17 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 18) {
-	//		moveToNorthEast(gridB_, gridC_, gridA_);
-	//	}
-
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 19 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 20) {
-	//		moveToSouthEast(gridB_, gridA_, gridC_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 21 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 22) {
-	//		moveToSouthEast(gridB_, gridC_, gridA_);
-	//	}
-	//	else if (getCurrentState(gridA_, gridB_, gridC_, gridD_) == 23 || getCurrentState(gridA_, gridB_, gridC_, gridD_) == 24) {
-	//		moveToSouthEast(gridA_, gridB_, gridC_);
-	//	}
-	//}
-
-	/*if (isPresentInPair(gridA_, gridB_))
-	{
-		if (gridC_->GetPosition()[0] == gridD_->GetPosition()[0] && gridA_->GetPosition()[0] < gridC_->GetPosition()[0])
-		{
-			cout << "rebuildGrid" << endl;
-
-			moveTwoActorsByX(gridC_, gridD_, -2.0);
-		}
-		else if (gridC_->GetPosition()[0] == gridD_->GetPosition()[0] && gridA_->GetPosition()[0] > gridC_->GetPosition()[0])
-		{
-			cout << "rebuildGrid" << endl;
-
-			moveTwoActorsByX(gridC_, gridD_, 2.0);
-		}
-
-		 else if (gridC_->GetPosition()[1] == gridD_->GetPosition()[1] && gridA_->GetPosition()[1] < gridC_->GetPosition()[1])
-		{
-			moveTwoActorsByY(gridC_, gridD_, -2.0);
-		}
-		else if (gridC_->GetPosition()[1] == gridD_->GetPosition()[1] && gridA_->GetPosition()[1] > gridC_->GetPosition()[1])
-		{
-			moveTwoActorsByY(gridC_, gridD_, 2.0);
-		}
-	}
-
-	else if (isPresentInPair(gridA_, gridC_))
-	{
-		if (gridB_->GetPosition()[0] == gridD_->GetPosition()[0] && gridA_->GetPosition()[0] < gridB_->GetPosition()[0])
-		{
-			moveTwoActorsByX(gridB_, gridD_, -2.0);
-		}
-		else if (gridB_->GetPosition()[0] == gridD_->GetPosition()[0] && gridA_->GetPosition()[0] > gridB_->GetPosition()[0])
-		{
-			moveTwoActorsByX(gridB_, gridD_, 2.0);
-		}
-
-		else if (gridB_->GetPosition()[1] == gridD_->GetPosition()[1] && gridA_->GetPosition()[1] < gridB_->GetPosition()[1])
-		{
-			moveTwoActorsByY(gridB_, gridD_, -2.0);
-		}
-		else if (gridB_->GetPosition()[1] == gridD_->GetPosition()[1] && gridA_->GetPosition()[1] > gridB_->GetPosition()[1])
-		{
-			moveTwoActorsByY(gridB_, gridD_, 2.0);
-		}
-	} 
-
-	else if (isPresentInPair(gridA_, gridD_))
-	{
-		if (gridB_->GetPosition()[0] == gridC_->GetPosition()[0] && gridA_->GetPosition()[0] < gridB_->GetPosition()[0])
-		{
-			moveTwoActorsByX(gridB_, gridC_, -2.0);
-		}
-		else if (gridB_->GetPosition()[0] == gridC_->GetPosition()[0] && gridA_->GetPosition()[0] > gridB_->GetPosition()[0])
-		{
-			moveTwoActorsByX(gridB_, gridC_, 2.0);
-		}
-
-		else if (gridB_->GetPosition()[1] == gridC_->GetPosition()[1] && gridA_->GetPosition()[1] < gridB_->GetPosition()[1])
-		{
-			moveTwoActorsByY(gridB_, gridC_, -2.0);
-		}
-		else if (gridB_->GetPosition()[1] == gridC_->GetPosition()[1] && gridA_->GetPosition()[1] > gridB_->GetPosition()[1])
-		{
-			moveTwoActorsByY(gridB_, gridC_, 2.0);
-		}
-	}
-
-	else if (isPresentInPair(gridB_, gridC_))
-	{
-		if (gridA_->GetPosition()[0] == gridD_->GetPosition()[0] && gridB_->GetPosition()[0] < gridA_->GetPosition()[0]) 
-		{
-			moveTwoActorsByX(gridA_, gridD_, -2.0);
-
-		} else if (gridA_->GetPosition()[0] == gridD_->GetPosition()[0] && gridB_->GetPosition()[0] > gridA_->GetPosition()[0])
-		{
-			moveTwoActorsByX(gridA_, gridD_, 2.0);
-
-		} else if (gridA_->GetPosition()[1] == gridD_->GetPosition()[1] && gridB_->GetPosition()[1] < gridA_->GetPosition()[1])
-		{
-			moveTwoActorsByY(gridA_, gridD_, -2.0);
-		}
-		else if (gridA_->GetPosition()[1] == gridD_->GetPosition()[1] && gridB_->GetPosition()[1] > gridA_->GetPosition()[1])
-		{
-			moveTwoActorsByY(gridA_, gridD_, 2.0);
-		}
-	}
-
-	else if (isPresentInPair(gridB_, gridD_))
-	{
-		if (gridA_->GetPosition()[0] == gridC_->GetPosition()[0] && gridB_->GetPosition()[0] < gridA_->GetPosition()[0])
-		{
-			moveTwoActorsByX(gridA_, gridC_, -2.0);
-		} else if (gridA_->GetPosition()[0] == gridC_->GetPosition()[0] && gridB_->GetPosition()[0] > gridA_->GetPosition()[0])
-		{
-			moveTwoActorsByX(gridA_, gridC_, 2.0);
-
-		} else if (gridA_->GetPosition()[1] == gridC_->GetPosition()[1] && gridB_->GetPosition()[1] < gridA_->GetPosition()[1])
-		{
-			moveTwoActorsByY(gridA_, gridC_, -2.0);
-
-		} else if (gridA_->GetPosition()[1] == gridC_->GetPosition()[1] && gridB_->GetPosition()[1] > gridA_->GetPosition()[1])
-		{
-			moveTwoActorsByY(gridA_, gridC_, 2.0);
-		}
-
-	}
-
-	else if (isPresentInPair(gridC_, gridD_))
-	{
-		if (gridA_->GetPosition()[0] == gridB_->GetPosition()[0] && gridD_->GetPosition()[0] < gridA_->GetPosition()[0])
-		{
-			moveTwoActorsByX(gridA_, gridB_, -2.0);
-		}
-		else if (gridA_->GetPosition()[0] == gridB_->GetPosition()[0] && gridD_->GetPosition()[0] > gridA_->GetPosition()[0])
-		{
-			moveTwoActorsByX(gridA_, gridB_, 2.0);
-		}
-		else if (gridA_->GetPosition()[1] == gridB_->GetPosition()[1] && gridD_->GetPosition()[1] < gridA_->GetPosition()[1])
-		{
-			moveTwoActorsByY(gridA_, gridB_, -2.0);
-		}
-		else if (gridA_->GetPosition()[1] == gridB_->GetPosition()[1] && gridD_->GetPosition()[1] > gridA_->GetPosition()[1])
-		{
-			moveTwoActorsByY(gridA_, gridB_, 2.0);
-		}
-	}*/
+	
 }
 
 
@@ -1420,22 +1243,19 @@ bool GridStyleFour::isPresentInPair(Grid* gridA, Grid* gridB)
 	return flag;
 }
 
-void GridStyleFour::moveTwoActorsByX(Grid* gridA, Grid* gridB, double d)
+void GridStyleFour::moveTwoGridByX(Grid* gridA, Grid* gridB, double d)
 {
 	gridA->SetPosition(gridA->GetPosition()[0] + d, gridA->GetPosition()[1]);
 	gridB->SetPosition(gridB->GetPosition()[0] + d, gridB->GetPosition()[1]);
 
-	cout << gridA->GetPosition()[0] << "   " << gridA->GetPosition()[1] << endl;
-	cout << gridB->GetPosition()[0] << "   " << gridB->GetPosition()[1] << endl;
+	
 }
 
-void GridStyleFour::moveTwoActorsByY(Grid* gridA, Grid* gridB, double d)
+void GridStyleFour::moveTwoGridByY(Grid* gridA, Grid* gridB, double d)
 {
 	gridA->SetPosition(gridA->GetPosition()[0], gridA->GetPosition()[1] + d);
 	gridB->SetPosition(gridB->GetPosition()[0], gridB->GetPosition()[1] + d);
 
-	cout << gridA->GetPosition()[0] << " ---------------  " << gridA->GetPosition()[1] << endl;
-	cout << gridB->GetPosition()[0] << " ---------------  " << gridB->GetPosition()[1] << endl;
 }
 
 bool GridStyleFour::isPresentInOne(Grid* grid) 
@@ -1520,4 +1340,17 @@ void GridStyleFour::moveToSouthEast(Grid* gridA, Grid* gridB, Grid* gridC)
 	double xC = gridC->GetPosition()[0];
 	double yC = gridC->GetPosition()[1];
 	gridC->SetPosition(xC + 1.0, yC - 1.0);
+}
+
+double* GridStyleFour::getCurrentMousePosition() {
+	double x = Interactor->GetEventPosition()[0];
+	double y = Interactor->GetEventPosition()[1];
+
+	vtkSmartPointer<vtkCoordinate> coordinate =
+		vtkSmartPointer<vtkCoordinate>::New();
+	coordinate->SetCoordinateSystemToDisplay();
+	coordinate->SetValue(x, y, 0);
+	double* world = coordinate->GetComputedWorldValue(Interactor->GetRenderWindow()->GetRenderers()->GetFirstRenderer());
+
+	return world;
 }

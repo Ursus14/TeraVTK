@@ -11,7 +11,8 @@ class Grid
 public:
 	Grid(
 		double x, 
-		double y
+		double y,
+		double d
 	);
 
 
@@ -22,7 +23,10 @@ public:
 	void SetPosition(double x, double y);
 	int size();
 	void rebuild();
-	
+	void SetScale(double sc);
+	double* GetScale();
+	double GetRadius();
+
 private:
 	vtkSmartPointer<vtkActor> doActor(double s_x, double s_y, double x, double y, double d_x, double d_y);
 	void doGrid(double d_x, double d_y);
@@ -32,4 +36,5 @@ private:
 	std::vector<vtkSmartPointer<vtkActor>> grid;
 	double x_ = 0.0;
 	double y_ = 0.0;
+	double d_ = 0.0;
 };
