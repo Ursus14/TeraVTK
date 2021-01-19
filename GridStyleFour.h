@@ -19,14 +19,18 @@
 #include <vtkPointPicker.h>
 #include <vtkDataSetMapper.h>
 #include <vtkSphereSource.h>
+#include <vtkLineSource.h>
+#include <vtkRegularPolygonSource.h>
 #include <chrono>
 #include <ctime>
 
+#include "Figures.h"
 #include "Grid.h"
-#include <vtkUnstructuredGrid.h>
+#include "Point.h"
+#include "DoubleClickMouse.h"
 
 
-class GridStyleFour : public vtkInteractorStyleTrackballCamera
+class GridStyleFour : public vtkInteractorStyleTrackballCamera, DoubleClickMouse
 {
 public:
 	static GridStyleFour* New();
@@ -71,8 +75,6 @@ private:
 	void buildBrokenLine();
 	void buildPoint(double* coordinate);
 	void moveGrid();
-	bool isDoubleClickedL(int* pickPosition);
-	bool isDoubleClickedR(int* pickPosition);
 
 	int getCurrentState(Grid* gridA, Grid* gridB, Grid* gridC, Grid* gridD);
 	double* getCurrentMousePosition();
@@ -91,6 +93,8 @@ private:
 	bool flg = false;
 	int numberOfDoubleClicks = 0;
 	int countBack = 1, countForw = 1;
+
+	float doubleClickTimeLimit = 0.25f;
 	double grid_CellX = 0.05;
 	double grid_CellY = 0.05;
 	double viewportSize[2];

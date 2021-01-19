@@ -1,5 +1,5 @@
 #include "GridStyleFour.h"
-#include <vtkRegularPolygonSource.h>
+
 
 vtkStandardNewMacro(GridStyleFour);
 
@@ -52,16 +52,10 @@ GridStyleFour::GridStyleFour(
 	countOfPoints_ = 0;
 	//
 
+	// Figures
+	//
 
-	// Double click
 	
-	ResetPixelDistance = 5;
-	PreviousPositionL[0] = 0;
-	PreviousPositionL[1] = 0;
-	PreviousPositionR[0] = 0;
-	PreviousPositionR[1] = 0;
-	
-	// ------------
 
 
 	lineActor_ = vtkSmartPointer<vtkActor>::New();
@@ -119,10 +113,13 @@ void GridStyleFour::OnRightButtonDown() {
 
 	int pickPosition[2];
 	this->GetInteractor()->GetEventPosition(pickPosition);
+	
 
-	if (isDoubleClickedR(pickPosition)) {
+	if (DoubleClickMouse::isDoubleClick(pickPosition, startR_, endR_)) {
 		countOfPoints_++;
-		buildPoint(getCurrentMousePosition());
+		Point* point = new Point(getCurrentMousePosition());
+		point->build(renderer_);
+		Interactor->GetRenderWindow()->Render();
 		
 		/*if (countOfPoints_ == 5) {
 			buildBrokenLine();
@@ -130,10 +127,8 @@ void GridStyleFour::OnRightButtonDown() {
 	}
 
 
-	this->PreviousPositionR[0] = pickPosition[0];
-	this->PreviousPositionR[1] = pickPosition[1];
-
-}
+	this->SetPreviousPosition(pickPosition);
+	}
 
 void GridStyleFour::OnLeftButtonDown()
 {
@@ -141,10 +136,11 @@ void GridStyleFour::OnLeftButtonDown()
 	
 	int pickPosition[2];
 	this->GetInteractor()->GetEventPosition(pickPosition);
+	
 
 
 	
-	if (isDoubleClickedL(pickPosition)) {
+	if (this->isDoubleClick(pickPosition, startL_, endL_)) {
 		numberOfDoubleClicks++;
 		isAddLine = true;
 		if (numberOfDoubleClicks == 2) {
@@ -158,20 +154,19 @@ void GridStyleFour::OnLeftButtonDown()
 	}
 	
 
-	this->PreviousPositionL[0] = pickPosition[0];
-	this->PreviousPositionL[1] = pickPosition[1];
+	this->SetPreviousPosition(pickPosition);
 
 
 	SetTimerDuration(1);
 	UseTimersOn();
 	vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
 	StartTimer();
+	
 }
 
 void GridStyleFour::OnLeftButtonUp()
 {
 	endL_ = std::chrono::system_clock::now(); 
-	UseTimersOff();
 	EndTimer();
 
 	vtkInteractorStyleTrackballCamera::OnLeftButtonUp();
@@ -293,7 +288,7 @@ void GridStyleFour::buildPoint(double* coordinate) {
 	vtkSmartPointer<vtkSphereSource> point = vtkSmartPointer<vtkSphereSource>::New();
 	point->SetThetaResolution(100);
 	point->SetPhiResolution(50);
-	point->SetRadius(0.002);
+	point->SetRadius(0.001);
 	vtkSmartPointer<vtkPolyDataMapper> pointMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
 
 	pointMapper->SetInputConnection(point->GetOutputPort());
@@ -307,39 +302,6 @@ void GridStyleFour::buildPoint(double* coordinate) {
 
 	renderer_->AddActor(pointActor);
 	Interactor->GetRenderWindow()->Render();
-}
-
-bool GridStyleFour::isDoubleClickedL(int* pickPosition) {
-
-	int xdist = pickPosition[0] - this->PreviousPositionL[0];
-	int ydist = pickPosition[1] - this->PreviousPositionL[1];
-
-	std::chrono::duration<double> elapsed_seconds = endL_ - startL_;
-	int moveDistance = (double)(xdist * xdist + ydist * ydist);
-	bool flag = false;
-	if (moveDistance < (this->ResetPixelDistance)^2 && abs(elapsed_seconds.count()) < 0.14)
-	{
-		std::cout << "Double clicked on left." << std::endl;
-		flag = true;
-	}
-	return flag;
-}
-
-
-bool GridStyleFour::isDoubleClickedR(int* pickPosition) {
-
-	int xdist = pickPosition[0] - this->PreviousPositionR[0];
-	int ydist = pickPosition[1] - this->PreviousPositionR[1];
-
-	std::chrono::duration<double> elapsed_seconds = endR_ - startR_;
-	int moveDistance = (double)(xdist * xdist + ydist * ydist);
-	bool flag = false;
-	if (moveDistance < (this->ResetPixelDistance)^2 && abs(elapsed_seconds.count()) < 0.14)
-	{
-		std::cout << "Double clicked on right." << std::endl;
-		flag = true;
-	}
-	return flag;
 }
 
 
@@ -1345,6 +1307,9 @@ void GridStyleFour::moveToSouthEast(Grid* gridA, Grid* gridB, Grid* gridC)
 double* GridStyleFour::getCurrentMousePosition() {
 	double x = Interactor->GetEventPosition()[0];
 	double y = Interactor->GetEventPosition()[1];
+
+	std::cout << x << "            " << y << std::endl;
+
 
 	vtkSmartPointer<vtkCoordinate> coordinate =
 		vtkSmartPointer<vtkCoordinate>::New();
