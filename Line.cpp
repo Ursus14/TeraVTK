@@ -26,10 +26,8 @@ void Line::build(double* coordinateE, vtkSmartPointer<vtkActor> lineActor, vtkSm
 		vtkSmartPointer<vtkLineSource>::New();
 
 	lineSource->SetPoint1(beginPosition[0], beginPosition[1], 0.0);
-	lineSource->SetPoint2(coordinateE[0], coordinateE[1], 0.0);
+	lineSource->SetPoint2(endPosition[0], endPosition[1], 0.0);
 
-	cout << " First point:     " << beginPosition[0] << "    " << beginPosition[1] << endl;
-	cout << " Second point:     " << coordinateE[0] << "    " << coordinateE[1] << endl;
 	endPosition = coordinateE;
 
 

@@ -51,18 +51,6 @@ GridStyleFour::GridStyleFour(
 	// lineSource
 	countOfPoints_ = 0;
 	//
-
-	// Figures
-	//
-
-	
-
-
-	lineActor_ = vtkSmartPointer<vtkActor>::New();
-
-
-	// ------------
-
 	
 }
 
@@ -72,29 +60,15 @@ void GridStyleFour::OnLeave() {
 	Interactor->GetRenderWindow()->Render();
 }
 
-void GridStyleFour::OnMouseMove()
-{
+void GridStyleFour::OnMouseMove() {
 	double* world = getCurrentMousePosition();
 
-	/*if (world[0] < coordinate_[0])
-	{
-		coordinate_[0] -= 0.01;
-	}
-	if (world[0] > coordinate_[0])
-	{
-		coordinate_[0] += 0.01;
-	}
-	if (world[1] < coordinate_[1])
-	{
-		coordinate_[1] -= 0.01;
-	}
-	if (world[1] > coordinate_[1])
-	{
-		coordinate_[1] += 0.01;
-	}*/
-	
 	rebuildMarker(world);
 	if (isAddLine) {
+		line_->SetBeginPosition(prevPosition);
+		line_->SetEndPosition(world);
+		cout << "Begin position::  " << prevPosition[0] << "  ---------  " << prevPosition[1] << endl;
+		cout << "End position::  " << world[0] << "  ---------  " << world[1] << "\n" << endl;
 		line_->build(world, lineActor_, renderer_);
 		Interactor->GetRenderWindow()->Render();
 		
@@ -117,47 +91,51 @@ void GridStyleFour::OnRightButtonDown() {
 
 	if (DoubleClickMouse::isDoubleClick(pickPosition, startR_, endR_)) {
 		countOfPoints_++;
-		Point* point = new Point(getCurrentMousePosition());
+		double* mousePosition = getCurrentMousePosition();
+		points_->InsertNextPoint(mousePosition[0], mousePosition[1], 0.0);
+		Point* point = new Point(mousePosition);
 		point->build(renderer_);
 		Interactor->GetRenderWindow()->Render();
 		
-		/*if (countOfPoints_ == 5) {
-			buildBrokenLine();
-		}*/
+		if (countOfPoints_ == 5) {
+			countOfPoints_ = 0;
+			brokenLine_->build(points_, renderer_);
+			Interactor->GetRenderWindow()->Render();
+			points_ = vtkSmartPointer<vtkPoints>::New();
+			brokenLine_ = new BrokenLine();
+		}
 	}
 
 
 	this->SetPreviousPosition(pickPosition);
 	}
 
-void GridStyleFour::OnLeftButtonDown()
-{
+void GridStyleFour::OnLeftButtonDown() {
 	startL_ = std::chrono::system_clock::now();
+	double* mousePosition = getCurrentMousePosition();
 	
 	int pickPosition[2];
 	this->GetInteractor()->GetEventPosition(pickPosition);
 	
 	if (this->isDoubleClick(pickPosition, startL_, endL_)) {
+		cout << "print me" << endl;
 		numberOfDoubleClicks++;
-		isAddLine = true;
-		if (numberOfDoubleClicks == 2) {
-			isAddLine = false;
-			numberOfDoubleClicks = 0;
 
-			line_->build(getCurrentMousePosition(), vtkSmartPointer<vtkActor>::New(), renderer_);
-			Point* pointB = new Point(getCurrentMousePosition());
-			pointB->build(renderer_);
-
-			Interactor->GetRenderWindow()->Render();
-		}
-		else {
+		if (numberOfDoubleClicks == 1) {
+			isAddLine = true;
 			line_ = new Line();
 			lineActor_ = vtkSmartPointer<vtkActor>::New();
-			line_->SetBeginPosition(getCurrentMousePosition());
+			prevPosition = getCurrentMousePosition();
+		} else if (numberOfDoubleClicks == 2) {
+			line_->SetBeginPosition(prevPosition);
+			line_->SetEndPosition(mousePosition);
+			line_->build(mousePosition, vtkSmartPointer<vtkActor>::New(), renderer_);
+			Interactor->GetRenderWindow()->Render();
+			isAddLine = false;
+			numberOfDoubleClicks = 0;
 		}
 	}
 	
-
 	this->SetPreviousPosition(pickPosition);
 
 
@@ -168,10 +146,10 @@ void GridStyleFour::OnLeftButtonDown()
 	
 }
 
-void GridStyleFour::OnLeftButtonUp()
-{
-	endL_ = std::chrono::system_clock::now(); 
+void GridStyleFour::OnLeftButtonUp() {
 	EndTimer();
+	UseTimersOff();
+	endL_ = std::chrono::system_clock::now();
 
 	vtkInteractorStyleTrackballCamera::OnLeftButtonUp();
 }
@@ -243,68 +221,6 @@ void GridStyleFour::rebuildMarker(double* coordinate)
 	marker->SetCenter(coordinate[0], coordinate[1], 0);
 
 	vtkPolyDataMapper::SafeDownCast(actorMarker_->GetMapper())->SetInputConnection(marker->GetOutputPort());
-	Interactor->GetRenderWindow()->Render();
-}
-
-void GridStyleFour::buildLine(double* coordinate, vtkSmartPointer<vtkActor> lineActor) {
-	
-	vtkSmartPointer<vtkLineSource> lineSource =
-		vtkSmartPointer<vtkLineSource>::New();
-	
-	lineSource->SetPoint1(prevPosition[0], prevPosition[1], 0.0);
-	lineSource->SetPoint2(coordinate[0], coordinate[1], 0.0);
-
-	cout << " First point:     "  << prevPosition[0] << "    " << prevPosition[1] << endl;
-	cout << " Second point:     "  << coordinate[0] << "    " << coordinate[1] << endl;
-
-	vtkSmartPointer<vtkPolyDataMapper> lineMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-
-	lineMapper->SetInputConnection(lineSource->GetOutputPort());
-
-	lineActor->SetMapper(lineMapper);
-	lineActor->GetProperty()->SetColor(0.0, 0.0, 0.0);
-
-
-	renderer_->AddActor(lineActor);
-	Interactor->GetRenderWindow()->Render();
-
-
-}
-
-void GridStyleFour::buildBrokenLine() {
-	vtkSmartPointer<vtkLineSource> lineSource =
-		vtkSmartPointer<vtkLineSource>::New();
-
-	lineSource->SetPoints(points_);
-	
-	vtkSmartPointer<vtkPolyDataMapper> brokenLineMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-
-	brokenLineMapper->SetInputConnection(lineSource->GetOutputPort());
-
-	vtkSmartPointer<vtkActor> brokenLineActor = vtkSmartPointer<vtkActor>::New();
-	brokenLineActor->SetMapper(brokenLineMapper);
-
-	renderer_->AddActor(brokenLineActor);
-	Interactor->GetRenderWindow()->Render();
-}
-
-void GridStyleFour::buildPoint(double* coordinate) {
-	vtkSmartPointer<vtkSphereSource> point = vtkSmartPointer<vtkSphereSource>::New();
-	point->SetThetaResolution(100);
-	point->SetPhiResolution(50);
-	point->SetRadius(0.001);
-	vtkSmartPointer<vtkPolyDataMapper> pointMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-
-	pointMapper->SetInputConnection(point->GetOutputPort());
-
-	vtkSmartPointer<vtkActor> pointActor = vtkSmartPointer<vtkActor>::New();
-	pointActor->SetMapper(pointMapper);
-
-	pointActor->GetProperty()->SetColor(0.0, 0.0, 0.0);
-	pointActor->SetPosition(coordinate[0], coordinate[1], 0.0);
-
-
-	renderer_->AddActor(pointActor);
 	Interactor->GetRenderWindow()->Render();
 }
 

@@ -20,8 +20,8 @@ private:
 	int* PreviousPosition;
 	int* CurrentPosition;
 
-	int resetPixelDistance = 3; 
-	float doubleClickTimeLimit = 0.25f;
+	int resetPixelDistance = 5; 
+	double doubleClickTimeLimit = 0.5;
 
 };
 

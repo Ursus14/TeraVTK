@@ -24,7 +24,6 @@
 #include <chrono>
 #include <ctime>
 
-#include "Figures.h"
 #include "Grid.h"
 #include "Point.h"
 #include "Line.h"
@@ -109,7 +108,7 @@ private:
 
 	// Double click -----
 	bool isAddLine;
-	double* prevPosition;
+	double* prevPosition = new double[2]{0.0, 0.0};
 	int PreviousPositionL[2];
 	int PreviousPositionR[2];
 	int ResetPixelDistance;
@@ -120,7 +119,7 @@ private:
 	std::chrono::system_clock::time_point startR_ = std::chrono::system_clock::now();
 	std::chrono::system_clock::time_point endR_ = std::chrono::system_clock::now();
 
-	vtkSmartPointer<vtkPoints> points_;
+	vtkSmartPointer<vtkPoints> points_ = vtkSmartPointer<vtkPoints>::New();
 
 	// ------------------
 
@@ -141,6 +140,7 @@ private:
 	vtkSmartPointer<vtkActor> lineActor_ = vtkSmartPointer<vtkActor>::New();
 	vtkSmartPointer<vtkRenderer> renderer_;
 	vtkSmartPointer<vtkActor> actorMarker_;
+
 	//--
 	Grid* gridA_;
 	Grid* gridB_;

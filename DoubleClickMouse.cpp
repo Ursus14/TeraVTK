@@ -27,9 +27,9 @@ bool DoubleClickMouse::isDoubleClick(int* pickPosition, std::chrono::system_cloc
 	int ydist = pickPosition[1] - this->PreviousPosition[1];
 
 	std::chrono::duration<double> elapsed_seconds = end - start;
-	int moveDistance = (double)(xdist * xdist + ydist * ydist);
+	int moveDistance = xdist * xdist + ydist * ydist;
 	bool flag = false;
-	if ((moveDistance < (this->resetPixelDistance)^2) && (abs(elapsed_seconds.count()) < doubleClickTimeLimit))
+	if (moveDistance < (this->resetPixelDistance)^2 && (abs(elapsed_seconds.count()) < doubleClickTimeLimit))
 	{
 		flag = true;
 	}
