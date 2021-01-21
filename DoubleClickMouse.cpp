@@ -1,6 +1,9 @@
 #include "DoubleClickMouse.h"
 
-DoubleClickMouse::DoubleClickMouse() {};
+DoubleClickMouse::DoubleClickMouse() {
+	PreviousPosition = new int[2]{ 0, 0 };
+	CurrentPosition = new int[2]{ 0, 0 };
+};
 
 void DoubleClickMouse::SetPreviousPosition(int* position) {
 	this->PreviousPosition = position;

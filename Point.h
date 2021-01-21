@@ -4,6 +4,7 @@
 #include <vtkPolyDataMapper.h>
 #include <vtkActor.h>
 #include <vtkProperty.h>
+#include <vtkRegularPolygonSource.h>
 
 class Point
 {
@@ -14,11 +15,13 @@ public:
 public:
 	void SetPosition(double* coordinate);
 	double* GetPosition();
+	void SetRadius(double radius);
 
 	void build(vtkSmartPointer<vtkRenderer> renderer);
 
 private:
 	double* coordinate;
+	double radius = 0.001;
 
 };
 

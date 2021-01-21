@@ -27,6 +27,8 @@
 #include "Figures.h"
 #include "Grid.h"
 #include "Point.h"
+#include "Line.h"
+#include "BrokenLine.h"
 #include "DoubleClickMouse.h"
 
 
@@ -120,6 +122,11 @@ private:
 
 	vtkSmartPointer<vtkPoints> points_;
 
+	// ------------------
+
+	// ------------------
+	Line* line_ = new Line();
+	BrokenLine* brokenLine_ = new BrokenLine();
 	// ------------------
 
 	vtkSmartPointer<vtkCamera> camera_;

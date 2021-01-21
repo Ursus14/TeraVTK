@@ -95,8 +95,8 @@ void GridStyleFour::OnMouseMove()
 	
 	rebuildMarker(world);
 	if (isAddLine) {
-		
-		buildLine(world, lineActor_);
+		line_->build(world, lineActor_, renderer_);
+		Interactor->GetRenderWindow()->Render();
 		
 	}
 
@@ -137,19 +137,23 @@ void GridStyleFour::OnLeftButtonDown()
 	int pickPosition[2];
 	this->GetInteractor()->GetEventPosition(pickPosition);
 	
-
-
-	
 	if (this->isDoubleClick(pickPosition, startL_, endL_)) {
 		numberOfDoubleClicks++;
 		isAddLine = true;
 		if (numberOfDoubleClicks == 2) {
 			isAddLine = false;
 			numberOfDoubleClicks = 0;
-			buildLine(getCurrentMousePosition(), vtkSmartPointer<vtkActor>::New());
+
+			line_->build(getCurrentMousePosition(), vtkSmartPointer<vtkActor>::New(), renderer_);
+			Point* pointB = new Point(getCurrentMousePosition());
+			pointB->build(renderer_);
+
+			Interactor->GetRenderWindow()->Render();
 		}
 		else {
-			prevPosition = getCurrentMousePosition();
+			line_ = new Line();
+			lineActor_ = vtkSmartPointer<vtkActor>::New();
+			line_->SetBeginPosition(getCurrentMousePosition());
 		}
 	}
 	
@@ -1307,8 +1311,6 @@ void GridStyleFour::moveToSouthEast(Grid* gridA, Grid* gridB, Grid* gridC)
 double* GridStyleFour::getCurrentMousePosition() {
 	double x = Interactor->GetEventPosition()[0];
 	double y = Interactor->GetEventPosition()[1];
-
-	std::cout << x << "            " << y << std::endl;
 
 
 	vtkSmartPointer<vtkCoordinate> coordinate =

@@ -146,7 +146,7 @@ void InitScene(int width, int height) {
 	renderer->SetActiveCamera(camera);
 	//renderer->ResetCamera();
 	renderer->GetActiveCamera()->AddObserver(vtkCommand::ModifiedEvent, modifiedcallback);
-	renderer->AutomaticLightCreationOff();
+	//renderer->AutomaticLightCreationOff();
 	//renderer->GradientEnvironmentalBGOff();
 
 

@@ -16,8 +16,6 @@ public:
 
 
 private:
-	double* currentPosition;
-	double* previousPosition;
 
 	int* PreviousPosition;
 	int* CurrentPosition;
