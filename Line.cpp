@@ -21,12 +21,12 @@ double* Line::GetEndPosition() {
 	return this->endPosition;
 } 
 
-void Line::build(double* coordinateE, vtkSmartPointer<vtkActor> lineActor, vtkSmartPointer<vtkRenderer> renderer) {
+void Line::build(double* coordinateB, double* coordinateE, vtkSmartPointer<vtkActor> lineActor, vtkSmartPointer<vtkRenderer> renderer) {
 	vtkSmartPointer<vtkLineSource> lineSource =
 		vtkSmartPointer<vtkLineSource>::New();
 
-	lineSource->SetPoint1(beginPosition[0], beginPosition[1], 0.0);
-	lineSource->SetPoint2(endPosition[0], endPosition[1], 0.0);
+	lineSource->SetPoint1(coordinateB[0], coordinateB[1], 0.0);
+	lineSource->SetPoint2(coordinateE[0], coordinateE[1], 0.0);
 
 	endPosition = coordinateE;
 

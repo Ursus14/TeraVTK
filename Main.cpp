@@ -32,8 +32,6 @@ static void CameraModifiedCallback(vtkObject* caller,
 
 
 
-
-
 int main() {
 
 	InitScene(800, 800);
@@ -76,6 +74,9 @@ void InitScene(int width, int height) {
 
 	axesActor_->GetProperty()->SetColor(0.0, 0.0, 0.0);
 
+	// camera ---------------
+	 
+	camera->ParallelProjectionOn();
 
 	// -------------
 	

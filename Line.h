@@ -18,7 +18,7 @@ public:
 	double* GetBeginPosition();
 
 
-	void build(double* coordinateE, vtkSmartPointer<vtkActor> lineActor, vtkSmartPointer<vtkRenderer> renderer);
+	void build(double* coordinateB, double* coordinateE, vtkSmartPointer<vtkActor> lineActor, vtkSmartPointer<vtkRenderer> renderer);
 
 private:
 	double* beginPosition;

@@ -22,15 +22,14 @@ int* DoubleClickMouse::GetPreviousPosition() {
 }
 
 
-bool DoubleClickMouse::isDoubleClick(int* pickPosition, std::chrono::system_clock::time_point start, std::chrono::system_clock::time_point end) {
+bool DoubleClickMouse::isDoubleClick(int* pickPosition, std::chrono::system_clock::time_point start, std::chrono::system_clock::time_point end, int countOfClicks) {
 	int xdist = pickPosition[0] - this->PreviousPosition[0];
 	int ydist = pickPosition[1] - this->PreviousPosition[1];
 
 	std::chrono::duration<double> elapsed_seconds = end - start;
-	int moveDistance = xdist * xdist + ydist * ydist;
+	int moveDistance = (double)sqrt(xdist * xdist + ydist * ydist);
 	bool flag = false;
-	if (moveDistance < (this->resetPixelDistance)^2 && (abs(elapsed_seconds.count()) < doubleClickTimeLimit))
-	{
+	if (moveDistance < this->resetPixelDistance && (abs(elapsed_seconds.count()) < doubleClickTimeLimit) && countOfClicks == 2) {
 		flag = true;
 	}
 	return flag;

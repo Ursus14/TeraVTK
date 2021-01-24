@@ -47,11 +47,12 @@ GridStyleFour::GridStyleFour(
 	renderer_ = renderer;
 	zPosition = camera_->GetPosition()[2];
 	// --------
+	prevPosition = new double[2]{0.0, 0.0};
+	// --------
 	
 	// lineSource
 	countOfPoints_ = 0;
 	//
-	
 }
 
 void GridStyleFour::OnLeave() {
@@ -63,41 +64,31 @@ void GridStyleFour::OnLeave() {
 void GridStyleFour::OnMouseMove() {
 	double* world = getCurrentMousePosition();
 
-	rebuildMarker(world);
 	if (isAddLine) {
-		line_->SetBeginPosition(prevPosition);
-		line_->SetEndPosition(world);
-		cout << "Begin position::  " << prevPosition[0] << "  ---------  " << prevPosition[1] << endl;
-		cout << "End position::  " << world[0] << "  ---------  " << world[1] << "\n" << endl;
-		line_->build(world, lineActor_, renderer_);
+		currPosition = getCurrentMousePosition();
+		line_->build(prevPosition, currPosition, lineActor_, renderer_);
 		Interactor->GetRenderWindow()->Render();
-		
 	}
-
 	vtkInteractorStyleTrackballCamera::OnMouseMove();
 }
 
 void GridStyleFour::OnRightButtonUp() {
 	endR_ = std::chrono::system_clock::now();
-
-}
-
-void GridStyleFour::OnRightButtonDown() {
-	startR_ = std::chrono::system_clock::now();
-
+	countOfClicks++;
 	int pickPosition[2];
 	this->GetInteractor()->GetEventPosition(pickPosition);
-	
 
-	if (DoubleClickMouse::isDoubleClick(pickPosition, startR_, endR_)) {
+	bool flag = DoubleClickMouse::isDoubleClick(pickPosition, startR_, endR_, countOfClicks);
+	if (flag) {
+		countOfClicks = 0;
 		countOfPoints_++;
 		double* mousePosition = getCurrentMousePosition();
 		points_->InsertNextPoint(mousePosition[0], mousePosition[1], 0.0);
 		Point* point = new Point(mousePosition);
 		point->build(renderer_);
 		Interactor->GetRenderWindow()->Render();
-		
-		if (countOfPoints_ == 5) {
+
+		if (countOfPoints_ == 13) {
 			countOfPoints_ = 0;
 			brokenLine_->build(points_, renderer_);
 			Interactor->GetRenderWindow()->Render();
@@ -106,28 +97,27 @@ void GridStyleFour::OnRightButtonDown() {
 		}
 	}
 
-
 	this->SetPreviousPosition(pickPosition);
+}
+
+void GridStyleFour::OnRightButtonDown() {
+	startR_ = std::chrono::system_clock::now();
 	}
 
 void GridStyleFour::OnLeftButtonDown() {
-	startL_ = std::chrono::system_clock::now();
 	double* mousePosition = getCurrentMousePosition();
 	
 	int pickPosition[2];
 	this->GetInteractor()->GetEventPosition(pickPosition);
 	
-	if (this->isDoubleClick(pickPosition, startL_, endL_)) {
-		cout << "print me" << endl;
+	/*if (this->isDoubleClick(pickPosition, startL_, endL_)) {
 		numberOfDoubleClicks++;
-
 		if (numberOfDoubleClicks == 1) {
 			isAddLine = true;
 			line_ = new Line();
 			lineActor_ = vtkSmartPointer<vtkActor>::New();
-			prevPosition = getCurrentMousePosition();
+			line_->SetBeginPosition(mousePosition);
 		} else if (numberOfDoubleClicks == 2) {
-			line_->SetBeginPosition(prevPosition);
 			line_->SetEndPosition(mousePosition);
 			line_->build(mousePosition, vtkSmartPointer<vtkActor>::New(), renderer_);
 			Interactor->GetRenderWindow()->Render();
@@ -135,9 +125,11 @@ void GridStyleFour::OnLeftButtonDown() {
 			numberOfDoubleClicks = 0;
 		}
 	}
-	
+	*/
 	this->SetPreviousPosition(pickPosition);
 
+	prevPosition = getCurrentMousePosition();
+	isAddLine = true;
 
 	SetTimerDuration(1);
 	UseTimersOn();
@@ -149,7 +141,11 @@ void GridStyleFour::OnLeftButtonDown() {
 void GridStyleFour::OnLeftButtonUp() {
 	EndTimer();
 	UseTimersOff();
-	endL_ = std::chrono::system_clock::now();
+	line_->build(prevPosition, currPosition, vtkSmartPointer<vtkActor>::New(), renderer_);
+	Interactor->GetRenderWindow()->Render();
+	line_ = new Line();
+	lineActor_ = vtkSmartPointer<vtkActor>::New();
+	isAddLine = false;
 
 	vtkInteractorStyleTrackballCamera::OnLeftButtonUp();
 }
@@ -170,7 +166,7 @@ void GridStyleFour::OnMouseWheelBackward()
 		
 	}
 	zPosition = camera_->GetPosition()[2];
-	OnTimer();
+	//OnTimer();
 	flg = true;
 }
 
@@ -183,16 +179,17 @@ void GridStyleFour::OnMouseWheelForward()
 		countForw = 1;
 		rebuildGrid();
 	}
-	OnTimer();
+	//OnTimer();
 	flg = true;
 }
 
 
 void GridStyleFour::OnTimer()
 {
-	if (camera_->GetPosition()[2] / zPosition < 0.9999) {
+	if (camera_->GetPosition()[2] / zPosition < 0.9999999) {
 		camera_->SetPosition(camera_->GetPosition()[0], camera_->GetPosition()[1], zPosition);
 	}
+
 	moveGrid();
 	int* sizes = renderer_->GetSize();
 

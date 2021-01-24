@@ -93,6 +93,7 @@ private:
 private:
 	bool flg = false;
 	int numberOfDoubleClicks = 0;
+	int countOfClicks = 0;
 	int countBack = 1, countForw = 1;
 
 	float doubleClickTimeLimit = 0.25f;
@@ -107,8 +108,9 @@ private:
 	int countOfPoints_;
 
 	// Double click -----
-	bool isAddLine;
+	bool isAddLine = false;
 	double* prevPosition = new double[2]{0.0, 0.0};
+	double* currPosition = new double[2]{0.0, 0.0};
 	int PreviousPositionL[2];
 	int PreviousPositionR[2];
 	int ResetPixelDistance;
