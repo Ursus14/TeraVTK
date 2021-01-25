@@ -1,16 +1,19 @@
 #include "Line.h"
 
-Line::Line() {
-	beginPosition = new double[2]{ 0.0, 0.0 };
-	endPosition = new double[2]{ 0.0, 0.0 };
+Line::Line(vtkSmartPointer<vtkActor> lineActor) {
+	this->SetBeginPosition(new double[2]{ 0.0, 0.0 });
+	this->SetEndPosition(new double[2]{ 0.0, 0.0 });
+	this->lineActor_ = lineActor;
 };
 
 void Line::SetEndPosition(double* coordinate) {
-	this->endPosition = coordinate;
+	this->endPosition[0] = coordinate[0];
+	this->endPosition[1] = coordinate[1];
 }
 
 void Line::SetBeginPosition(double* coordinate) {
-	this->beginPosition = coordinate;
+	this->beginPosition[0] = coordinate[0];
+	this->beginPosition[1] = coordinate[1];
 }
 
 double* Line::GetBeginPosition() {
@@ -21,23 +24,24 @@ double* Line::GetEndPosition() {
 	return this->endPosition;
 } 
 
-void Line::build(double* coordinateB, double* coordinateE, vtkSmartPointer<vtkActor> lineActor, vtkSmartPointer<vtkRenderer> renderer) {
+void Line::build(double* coordinateE, vtkSmartPointer<vtkRenderer> renderer) {
 	vtkSmartPointer<vtkLineSource> lineSource =
 		vtkSmartPointer<vtkLineSource>::New();
 
-	lineSource->SetPoint1(coordinateB[0], coordinateB[1], 0.0);
+	lineSource->SetPoint1(beginPosition[0], beginPosition[1], 0.0);
 	lineSource->SetPoint2(coordinateE[0], coordinateE[1], 0.0);
 
-	endPosition = coordinateE;
-
+	endPosition[0] = coordinateE[0];
+	endPosition[1] = coordinateE[1];
 
 	vtkSmartPointer<vtkPolyDataMapper> lineMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
 
 	lineMapper->SetInputConnection(lineSource->GetOutputPort());
 
-	lineActor->SetMapper(lineMapper);
-	lineActor->GetProperty()->SetColor(0.0, 1.0, 0.0);
+	this->lineActor_->SetMapper(lineMapper);
+	this->lineActor_->GetProperty()->SetColor(0.0, 1.0, 0.0);
 
 
-	renderer->AddActor(lineActor);
+	renderer->AddActor(this->lineActor_);
+
 }

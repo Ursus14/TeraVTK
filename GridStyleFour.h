@@ -71,10 +71,6 @@ private:
 
 
 	void rebuildGrid();
-
-	void buildLine(double* coordinate, vtkSmartPointer<vtkActor> lineActor);
-	void buildBrokenLine();
-	void buildPoint(double* coordinate);
 	void moveGrid();
 
 	int getCurrentState(Grid* gridA, Grid* gridB, Grid* gridC, Grid* gridD);
@@ -109,8 +105,8 @@ private:
 
 	// Double click -----
 	bool isAddLine = false;
-	double* prevPosition = new double[2]{0.0, 0.0};
-	double* currPosition = new double[2]{0.0, 0.0};
+	double prevPosition[2]{ 0.0, 0.0 };
+	double currPosition[2]{ 0.0, 0.0 };
 	int PreviousPositionL[2];
 	int PreviousPositionR[2];
 	int ResetPixelDistance;
@@ -126,7 +122,7 @@ private:
 	// ------------------
 
 	// ------------------
-	Line* line_ = new Line();
+	Line* line_ = new Line(vtkSmartPointer<vtkActor>::New());;
 	BrokenLine* brokenLine_ = new BrokenLine();
 	// ------------------
 
@@ -139,7 +135,7 @@ private:
 
 	
 	vtkSmartPointer<vtkActor> axesMain_;
-	vtkSmartPointer<vtkActor> lineActor_ = vtkSmartPointer<vtkActor>::New();
+	vtkSmartPointer<vtkActor> lineActor_;
 	vtkSmartPointer<vtkRenderer> renderer_;
 	vtkSmartPointer<vtkActor> actorMarker_;
 

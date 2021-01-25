@@ -47,11 +47,13 @@ GridStyleFour::GridStyleFour(
 	renderer_ = renderer;
 	zPosition = camera_->GetPosition()[2];
 	// --------
-	prevPosition = new double[2]{0.0, 0.0};
 	// --------
 	
 	// lineSource
 	countOfPoints_ = 0;
+	//
+
+	// 
 	//
 }
 
@@ -63,74 +65,42 @@ void GridStyleFour::OnLeave() {
 
 void GridStyleFour::OnMouseMove() {
 	double* world = getCurrentMousePosition();
-
 	if (isAddLine) {
-		currPosition = getCurrentMousePosition();
-		line_->build(prevPosition, currPosition, lineActor_, renderer_);
+		line_->build(world, renderer_);
 		Interactor->GetRenderWindow()->Render();
 	}
+	rebuildMarker(world);
 	vtkInteractorStyleTrackballCamera::OnMouseMove();
 }
 
 void GridStyleFour::OnRightButtonUp() {
 	endR_ = std::chrono::system_clock::now();
-	countOfClicks++;
-	int pickPosition[2];
-	this->GetInteractor()->GetEventPosition(pickPosition);
+	
+	cout << "from On right button up" << prevPosition[0] << "     " << prevPosition[1] << endl;
+	line_->SetBeginPosition(prevPosition);
+	line_->build(getCurrentMousePosition(), renderer_);
+	Point* point = new Point(getCurrentMousePosition());
+	point->build(renderer_);
+	Interactor->GetRenderWindow()->Render();
+	line_ = new Line(vtkSmartPointer<vtkActor>::New());
+	isAddLine = false;
 
-	bool flag = DoubleClickMouse::isDoubleClick(pickPosition, startR_, endR_, countOfClicks);
-	if (flag) {
-		countOfClicks = 0;
-		countOfPoints_++;
-		double* mousePosition = getCurrentMousePosition();
-		points_->InsertNextPoint(mousePosition[0], mousePosition[1], 0.0);
-		Point* point = new Point(mousePosition);
-		point->build(renderer_);
-		Interactor->GetRenderWindow()->Render();
-
-		if (countOfPoints_ == 13) {
-			countOfPoints_ = 0;
-			brokenLine_->build(points_, renderer_);
-			Interactor->GetRenderWindow()->Render();
-			points_ = vtkSmartPointer<vtkPoints>::New();
-			brokenLine_ = new BrokenLine();
-		}
-	}
-
-	this->SetPreviousPosition(pickPosition);
 }
 
 void GridStyleFour::OnRightButtonDown() {
 	startR_ = std::chrono::system_clock::now();
-	}
+	prevPosition[0] = getCurrentMousePosition()[0];
+	prevPosition[1] = getCurrentMousePosition()[1];
+	line_->SetBeginPosition(prevPosition);
+	isAddLine = true;
+	Point* point = new Point(getCurrentMousePosition());
+	point->build(renderer_);
+	Interactor->GetRenderWindow()->Render();
+}
 
 void GridStyleFour::OnLeftButtonDown() {
-	double* mousePosition = getCurrentMousePosition();
+	startL_ = std::chrono::system_clock::now();
 	
-	int pickPosition[2];
-	this->GetInteractor()->GetEventPosition(pickPosition);
-	
-	/*if (this->isDoubleClick(pickPosition, startL_, endL_)) {
-		numberOfDoubleClicks++;
-		if (numberOfDoubleClicks == 1) {
-			isAddLine = true;
-			line_ = new Line();
-			lineActor_ = vtkSmartPointer<vtkActor>::New();
-			line_->SetBeginPosition(mousePosition);
-		} else if (numberOfDoubleClicks == 2) {
-			line_->SetEndPosition(mousePosition);
-			line_->build(mousePosition, vtkSmartPointer<vtkActor>::New(), renderer_);
-			Interactor->GetRenderWindow()->Render();
-			isAddLine = false;
-			numberOfDoubleClicks = 0;
-		}
-	}
-	*/
-	this->SetPreviousPosition(pickPosition);
-
-	prevPosition = getCurrentMousePosition();
-	isAddLine = true;
-
 	SetTimerDuration(1);
 	UseTimersOn();
 	vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
@@ -141,12 +111,8 @@ void GridStyleFour::OnLeftButtonDown() {
 void GridStyleFour::OnLeftButtonUp() {
 	EndTimer();
 	UseTimersOff();
-	line_->build(prevPosition, currPosition, vtkSmartPointer<vtkActor>::New(), renderer_);
-	Interactor->GetRenderWindow()->Render();
-	line_ = new Line();
-	lineActor_ = vtkSmartPointer<vtkActor>::New();
-	isAddLine = false;
-
+	endL_ = std::chrono::system_clock::now();
+		
 	vtkInteractorStyleTrackballCamera::OnLeftButtonUp();
 }
 
@@ -163,7 +129,6 @@ void GridStyleFour::OnMouseWheelBackward()
 	if (countBack % 3 == 0) {
 		countBack = 1;
 		rebuildGrid();
-		
 	}
 	zPosition = camera_->GetPosition()[2];
 	//OnTimer();

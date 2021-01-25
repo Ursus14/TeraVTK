@@ -8,7 +8,7 @@
 class Line
 {
 public:
-	Line();
+	Line(vtkSmartPointer<vtkActor> lineActor);
 
 public:
 	void SetEndPosition(double* coordinate);
@@ -17,11 +17,11 @@ public:
 	void SetBeginPosition(double* coordinate);
 	double* GetBeginPosition();
 
-
-	void build(double* coordinateB, double* coordinateE, vtkSmartPointer<vtkActor> lineActor, vtkSmartPointer<vtkRenderer> renderer);
+	void build(double* coordinateE, vtkSmartPointer<vtkRenderer> renderer);
 
 private:
-	double* beginPosition;
-	double* endPosition;
+	double beginPosition[2];
+	double endPosition[2];
+	vtkSmartPointer<vtkActor> lineActor_;
 };
 
