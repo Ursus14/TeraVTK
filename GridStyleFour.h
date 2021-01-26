@@ -26,7 +26,7 @@
 
 #include "Grid.h"
 #include "Point.h"
-#include "Line.h"
+#include "Lines.h"
 #include "BrokenLine.h"
 #include "DoubleClickMouse.h"
 
@@ -89,17 +89,14 @@ private:
 private:
 	bool flg = false;
 	int numberOfDoubleClicks = 0;
-	int countOfClicks = 0;
+	int countOfLines = 0;
 	int countBack = 1, countForw = 1;
 
-	float doubleClickTimeLimit = 0.25f;
-	double grid_CellX = 0.05;
-	double grid_CellY = 0.05;
+	
 	double viewportSize[2];
 	int cellScreenWidth_ = 0;
 	double worldToScreenCoeff_ = 0;
 	double  lastCameraScale_ = 0;
-	bool isPaneOnly_ = false;
 	double zPosition;
 	int countOfPoints_;
 
@@ -107,6 +104,7 @@ private:
 	bool isAddLine = false;
 	double prevPosition[2]{ 0.0, 0.0 };
 	double currPosition[2]{ 0.0, 0.0 };
+	std::vector<Line*> lines_;
 	int PreviousPositionL[2];
 	int PreviousPositionR[2];
 	int ResetPixelDistance;
@@ -122,7 +120,8 @@ private:
 	// ------------------
 
 	// ------------------
-	Line* line_ = new Line(vtkSmartPointer<vtkActor>::New());;
+	Line* line_ = new Line(vtkSmartPointer<vtkActor>::New());
+	Lines* lines = new Lines();
 	BrokenLine* brokenLine_ = new BrokenLine();
 	// ------------------
 

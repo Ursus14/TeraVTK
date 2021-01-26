@@ -49,12 +49,7 @@ GridStyleFour::GridStyleFour(
 	// --------
 	// --------
 	
-	// lineSource
-	countOfPoints_ = 0;
-	//
 
-	// 
-	//
 }
 
 void GridStyleFour::OnLeave() {
@@ -76,11 +71,19 @@ void GridStyleFour::OnMouseMove() {
 void GridStyleFour::OnRightButtonUp() {
 	endR_ = std::chrono::system_clock::now();
 	
-	cout << "from On right button up" << prevPosition[0] << "     " << prevPosition[1] << endl;
 	line_->SetBeginPosition(prevPosition);
 	line_->build(getCurrentMousePosition(), renderer_);
 	Point* point = new Point(getCurrentMousePosition());
 	point->build(renderer_);
+
+	for (auto line : lines_) {
+		if (lines->intersect(line, line_)) {
+			Point* point_ = new Point(lines->getIntersectionPoint(line, line_));
+			point_->build(renderer_);
+		}
+	}
+	lines_.push_back(line_);
+	
 	Interactor->GetRenderWindow()->Render();
 	line_ = new Line(vtkSmartPointer<vtkActor>::New());
 	isAddLine = false;
