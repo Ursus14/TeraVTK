@@ -14,11 +14,17 @@ VTK_MODULE_INIT(vtkInteractionStyle);
 #include <vtkActor.h>
 #include <vtkRenderer.h>
 #include <vtkCallbackCommand.h>
+#include <vtkPlotPoints.h>
+#include <vtkTable.h>
+#include <vtkDataObjectToTable.h>
+#include <vtkFloatArray.h>
+#include <vtkMapper.h>
 
 #include "Grid.h"
 #include "PlaneGrid.h"
 #include "GridInteractorStyle.h"
 #include "MainAxes.h"
+#include "Point.h"
 
 
 static void CameraModifiedCallback(vtkObject* caller,
@@ -37,12 +43,15 @@ int main(int, char* [])
 	
 	PlaneGrid* plane = new PlaneGrid();
 	MainAxes* axes = new MainAxes();
+	Point* marker = new Point();
+	std::vector<Point> drawPoints;
 	
 	renderer->AddActor(plane->GetActor(0));
 	renderer->AddActor(plane->GetActor(1));
 	renderer->AddActor(plane->GetActor(2));
 	renderer->AddActor(plane->GetActor(3));
 	renderer->AddActor(axes->GetActor());
+	renderer->AddActor(marker->GetActor());
 	renderer->SetBackground(1, 1, 1);
 
 	vtkSmartPointer<vtkRenderWindow> renderwindow =
@@ -66,7 +75,7 @@ int main(int, char* [])
 	renderer->AutomaticLightCreationOff();
 	renderer->GradientEnvironmentalBGOff();
 	
-	GridInteractorStyle* newGrid = new GridInteractorStyle(plane, axes, camera, renderer);
+	GridInteractorStyle* newGrid = new GridInteractorStyle(plane, axes,marker, drawPoints, camera, renderer);
 
 	vtkSmartPointer<GridInteractorStyle> style =
 		vtkSmartPointer<GridInteractorStyle>::Take(newGrid);
