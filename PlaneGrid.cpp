@@ -49,8 +49,8 @@ void PlaneGrid::RebuildPlane(vtkCamera* camera, int* sizewin)
 		pGrids[i].SetSize(newsize);
 	}
 
-	pGrids[sequence[0]].SetPosition(floor((camera->GetPosition()[0] - newsize[0] / 2.0)/ pGrids->GetCell()[0])* pGrids->GetCell()[0], 
-									floor((camera->GetPosition()[1] + newsize[1] / 2.0) / pGrids->GetCell()[1])* pGrids->GetCell()[1]);
+	pGrids[sequence[0]].SetPosition(floor((camera->GetPosition()[0] - newsize[0] / 2.0) / pGrids->GetCell()[0]) * pGrids->GetCell()[0],
+									floor((camera->GetPosition()[1] + newsize[1] / 2.0) / pGrids->GetCell()[1]) * pGrids->GetCell()[1]);
 	pGrids[sequence[1]].SetPosition(floor((camera->GetPosition()[0] + newsize[0] / 2.0) / pGrids->GetCell()[0]) * pGrids->GetCell()[0],
 									floor((camera->GetPosition()[1] + newsize[1] / 2.0) / pGrids->GetCell()[1]) * pGrids->GetCell()[1]);
 	pGrids[sequence[2]].SetPosition(floor((camera->GetPosition()[0] + newsize[0] / 2.0) / pGrids->GetCell()[0]) * pGrids->GetCell()[0],
@@ -79,6 +79,18 @@ void PlaneGrid::HitTestingAtBorder(vtkCamera* camera)
 	if (borderNumber != -1)
 		FlippingGrids(borderNumber);
 
+}
+
+void PlaneGrid::SetCell(double cellX, double cellY)
+{
+	for (int i = 0; i < 4; i++) {
+		pGrids[i].SetCell(cellX, cellY);
+	}
+}
+
+double* PlaneGrid::GetCell()
+{
+	return pGrids[0].GetCell();
 }
 
 void PlaneGrid::FlippingGrids(int borderNumber)
@@ -143,5 +155,3 @@ vtkSmartPointer<vtkActor> PlaneGrid::GetActor(int idx)
 {
 	return pGrids[idx].GetActor();
 }
-
-
