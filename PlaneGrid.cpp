@@ -155,3 +155,5 @@ vtkSmartPointer<vtkActor> PlaneGrid::GetActor(int idx)
 {
 	return pGrids[idx].GetActor();
 }
+
+

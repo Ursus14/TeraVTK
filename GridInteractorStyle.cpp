@@ -54,9 +54,13 @@ void GridInteractorStyle::OnLeftButtonDown()
 
 void GridInteractorStyle::OnLeftButtonUp()
 {
+	double* world = GetCurrentMousePosition();
+	if (prevPosition[0] == world[0] && prevPosition[1] == world[1]) {
+
+	}
 	line_->SetBeginPosition(prevPosition);
-	line_->build(GetCurrentMousePosition(), renderer);
-	Point* point = new Point(GetCurrentMousePosition());
+	line_->build(world, renderer);
+	Point* point = new Point();
 	renderer->AddActor(point->GetActor());
 
 	for (auto line : lines_) {

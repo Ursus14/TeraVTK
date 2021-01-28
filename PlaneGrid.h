@@ -25,3 +25,4 @@ private:
 	double* borderline;				// boundaries where the camera can be located
 	int sequence[4] = { 0, 1, 2, 3 };	// to indicate the position of each grid
 };
+
