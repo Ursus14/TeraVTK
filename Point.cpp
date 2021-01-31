@@ -1,36 +1,77 @@
 #include "Point.h"
 
-Point::Point(double* coordinate) {
-	SetPosition(coordinate);
-};
+Point::Point()
+{
+	actor = vtkSmartPointer<vtkActor>::New();
 
-double* Point::GetPosition() {
-	return this->coordinate;
-}
-
-void Point::SetPosition(double* coordinate){
-	this->coordinate = coordinate;
-}
-
-void Point::SetRadius(double radius) {
-	this->radius = radius;
-}
-
-void Point::build(vtkSmartPointer<vtkRenderer> renderer) {
 	vtkSmartPointer<vtkRegularPolygonSource> point = vtkSmartPointer<vtkRegularPolygonSource>::New();
 	point->SetNumberOfSides(50);
-	point->SetRadius(radius);
-	point->SetCenter(0.0, 0.0, 0.0);
-	vtkSmartPointer<vtkPolyDataMapper> pointMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-
-	pointMapper->SetInputConnection(point->GetOutputPort());
-
-	vtkSmartPointer<vtkActor> pointActor = vtkSmartPointer<vtkActor>::New();
-	pointActor->SetMapper(pointMapper);
-
-	pointActor->GetProperty()->SetColor(1.0, 0.0, 0.0);
-	pointActor->SetPosition(coordinate[0], coordinate[1], 0.0);
+	point->SetRadius(0.05);
+	point->SetCenter(0, 0, 0);
 
 
-	renderer->AddActor(pointActor);
+	vtkSmartPointer<vtkPolyDataMapper> mapper = vtkPolyDataMapper::New();
+	mapper->SetInputConnection(point->GetOutputPort());
+	actor->SetMapper(mapper);
+	actor->GetProperty()->SetColor(0.47, 0.07, 0.07);
+	actor->SetVisibility(1);
+}
+
+Point::Point(double* _position, double _radius)
+{
+	actor = vtkSmartPointer<vtkActor>::New();
+
+	vtkSmartPointer<vtkRegularPolygonSource> point = vtkSmartPointer<vtkRegularPolygonSource>::New();
+	point->SetNumberOfSides(50);
+	point->SetRadius(_radius);
+	point->SetCenter(_position);
+
+
+	vtkSmartPointer<vtkPolyDataMapper> mapper = vtkPolyDataMapper::New();
+	mapper->SetInputConnection(point->GetOutputPort());
+	actor->SetMapper(mapper);
+	actor->GetProperty()->SetColor(158 / 255.0, 77 / 255.0, 30 / 255.0);
+	actor->SetVisibility(1);
+
+	radius = _radius;
+}
+
+void Point::SetRadius(double _radius)
+{
+	actor->SetScale(_radius, _radius, 0);
+}
+
+void Point::SetPosition(double* position)
+{
+	actor->SetPosition(position);
+}
+
+void Point::SetColor(int r, int g, int b)
+{
+	actor->GetProperty()->SetColor(r / 255.0, g / 255.0, b / 255.0);
+}
+
+void Point::VisibilityOn()
+{
+	actor->SetVisibility(1);
+}
+
+void Point::VisibilityOff()
+{
+	actor->SetVisibility(0);
+}
+
+double Point::GetRadius()
+{
+	return radius;
+}
+
+double* Point::GetPosition()
+{
+	return actor->GetPosition();
+}
+
+vtkSmartPointer<vtkActor> Point::GetActor()
+{
+	return actor;
 }

@@ -18,6 +18,7 @@ public:
 	double* GetBeginPosition();
 
 	void build(double* coordinateE, vtkSmartPointer<vtkRenderer> renderer);
+	void rebuild(double* coordinateE, vtkSmartPointer<vtkRenderer> renderer);
 
 private:
 	double beginPosition[2];

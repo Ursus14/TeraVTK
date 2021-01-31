@@ -45,3 +45,13 @@ void Line::build(double* coordinateE, vtkSmartPointer<vtkRenderer> renderer) {
 	renderer->AddActor(this->lineActor_);
 
 }
+
+void Line::rebuild(double* coordinateE, vtkSmartPointer<vtkRenderer> renderer)
+{
+	vtkSmartPointer<vtkLineSource> lineSource =
+		vtkSmartPointer<vtkLineSource>::New();
+
+	lineSource->SetPoint1(beginPosition[0], beginPosition[1], 0.0);
+	lineSource->SetPoint2(coordinateE[0], coordinateE[1], 0.0);
+	vtkPolyDataMapper::SafeDownCast(lineActor_->GetMapper())->SetInputConnection(lineSource->GetOutputPort());
+}

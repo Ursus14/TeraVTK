@@ -1,91 +1,109 @@
 #include "Grid.h"
 
-
-Grid::Grid(double x, double y, double d) {
-	x_ = x;
-	y_ = y;
-	d_ = d;
-
-	init();
+Grid::Grid()
+{
+	position = new double[3]{ 0.0, 0.0, 0.0 };
+	size = new double[2]{ 10.0, 10.0 };
+	cell = new double[2]{ 1.0, 1.0 };
+	actor = vtkSmartPointer<vtkActor>::New();
+	BuildActor();
+	actor->SetPosition(position);
 }
 
-int Grid::size() {
-	return grid.size();
+Grid::Grid(double* _position, double* _size, double* _cell)
+{
+	position = new double[3]{ _position[0], _position[1], 0.0 };
+	size = new double[2]{ _size[0], _size[1] };
+	cell = new double[2]{ _cell[0], _cell[1] };
+	actor = vtkSmartPointer<vtkActor>::New();
+	BuildActor();
+	actor->SetPosition(position);
 }
 
-vtkSmartPointer<vtkActor> Grid::doActor(double s_x, double s_y, double x, double y, double d_x, double d_y) {
-	vtkSmartPointer<vtkActor> actor =
-		vtkSmartPointer<vtkActor>::New();
+void Grid::SetPosition(double* newpos)
+{
+	position[0] = newpos[0];
+	position[1] = newpos[1];
+	actor->SetPosition(position);
+}
 
-	double p0[3] = { x,  y, 0.0 };
-	double p1[3] = { x + s_x, y + s_y, 0.0 };
+void Grid::SetPosition(double newX, double newY, double newZ)
+{
+	position[0] = newX;
+	position[1] = newY;
+	position[2] = newZ;
+	actor->SetPosition(position);
+}
 
-	vtkSmartPointer<vtkLineSource> lineSource =
-		vtkSmartPointer<vtkLineSource>::New();
-	lineSource->SetPoint1(p0);
-	lineSource->SetPoint2(p1);
+void Grid::SetSize(double* newsize, bool rebuild)
+{
+	size[0] = newsize[0];
+	size[1] = newsize[1];
+	if (rebuild)
+		BuildActor();
+}
 
-	vtkSmartPointer<vtkPolyDataMapper> mapper =
-		vtkSmartPointer<vtkPolyDataMapper>::New();
-	mapper->SetInputConnection(lineSource->GetOutputPort());
+void Grid::SetCell(double cellX, double cellY, bool rebuild)
+{
+	cell[0] = cellX;
+	cell[1] = cellY;
+	if (rebuild)
+		BuildActor();
+}
 
-	actor->SetMapper(mapper);
-	actor->GetProperty()->SetColor(0.824, 0.824, 0.824);
+double* Grid::GetPosition()
+{
+	double* getpos = new double[2]{ position[0],position[1] };
+	return getpos;
+}
 
+double* Grid::GetSize()
+{
+	double* getsize = new double[2]{ size[0],size[1] };
+	return getsize;
+}
 
-	actor->SetPosition(d_x, d_y, 0);
+double* Grid::GetCell()
+{
+	double* getcell = new double[2]{ cell[0],cell[1] };
+	return getcell;
+}
+
+vtkSmartPointer<vtkActor> Grid::GetActor()
+{
 	return actor;
 }
 
-void Grid::doGrid(double d_x, double d_y) {
+void Grid::BuildActor()
+{
+	vtkSmartPointer<vtkPoints> points = vtkPoints::New();
+	vtkSmartPointer<vtkCellArray> lines = vtkCellArray::New();
 
-	for (double i = 0; i < d_; i += 0.01)
-	{
-		grid.push_back(doActor(0.0, d_, i, 0.0, d_x, d_y));
-		grid.push_back(doActor(d_, 0.0, 0.0, i, d_x, d_y));
+	int num = 0;
+	for (double i = -size[1]/2.0; i <= size[1]/2.0; i+=cell[1]) {
+		points->InsertNextPoint(-size[0]/2, i , 0);
+		points->InsertNextPoint(size[0]/2, i , 0);
 
+		vtkIdType cell[] = { 2 * num, 2 * num + 1 };
+		lines->InsertNextCell(2, cell);
+		num++;
 	}
-	
-}
 
-void Grid::init() {
-	doGrid(x_, y_);
-}
+	for (double i = -size[0]/2.0; i <= size[0]/2.0; i+=cell[0]) {
+		points->InsertNextPoint(i, -size[1]/2, 0);
+		points->InsertNextPoint(i , size[1]/2, 0);
 
-double* Grid::GetPosition() {
-	return new double[2] {grid[0]->GetPosition()[0], grid[0]->GetPosition()[1]};
-}
-
-void Grid::rebuild() {
-
-	/*for (int i = 0; i < grid.size(); i++) {
-		vtkPolyDataMapper::SafeDownCast(grid[i]->GetMapper())->SetInputData(polydata);
-	}*/
-}
-
-void Grid::SetPosition(double x, double y) {
-	//cout << "change position" << endl;
-	for (int i = 0; i < grid.size(); i++)
-	{
-		grid[i]->SetPosition(x, y, 0);
+		vtkIdType cell[] = { 2 * num, 2 * num + 1 };
+		lines->InsertNextCell(2, cell);
+		num++;
 	}
-}
 
-void Grid::SetScale(double sc) {
-	
-	for (int i = 0; i < grid.size(); i++) {
-		grid[i]->SetScale(sc);
-	}
-}
+	vtkSmartPointer<vtkPolyData> polydata = vtkPolyData::New();
+	polydata->SetPoints(points);
+	polydata->SetLines(lines);
 
-double* Grid::GetScale() {
-	return grid[0]->GetScale();
-}
-
-vtkSmartPointer<vtkActor> Grid::getActorByIndex(int i) {
-	return grid[i];
-}
-
-double Grid::GetRadius() {
-	return d_;
+	vtkSmartPointer<vtkPolyDataMapper> mapper = vtkPolyDataMapper::New();
+	mapper->SetInputData(polydata);
+	actor->SetMapper(mapper);
+	actor->GetProperty()->SetColor(0.8, 0.8, 0.8);
 }

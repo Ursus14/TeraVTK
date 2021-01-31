@@ -1,40 +1,31 @@
-#include <vtkProperty.h>
-#include <vtkRenderWindow.h>
-#include <vtkRenderWindowInteractor.h>
-#include <vtkcallbackcommand.h>
-#include <vtkRendererCollection.h>
-#include <vtkLineSource.h>
+#pragma once
+#include <vtkActor.h>
+#include <vtkSmartPointer.h>
+#include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
+#include <vtkProperty.h>
 
-class Grid 
-{
+class Grid {
 public:
-	Grid(
-		double x, 
-		double y,
-		double d
-	);
+	Grid();
+	Grid(double* _position, double* _size, double* _cell);
 
-
-public:
-	vtkSmartPointer<vtkActor> getActorByIndex(int i);
+	void SetPosition(double* newpos);
+	void SetPosition(double newX, double newY, double newZ = 0);
+	void SetSize(double* newsize, bool rebuild = true);
+	void SetCell(double cellX, double cellY, bool rebuild = true);
 
 	double* GetPosition();
-	void SetPosition(double x, double y);
-	int size();
-	void rebuild();
-	void SetScale(double sc);
-	double* GetScale();
-	double GetRadius();
+	double* GetSize();
+	double* GetCell();
+	vtkSmartPointer<vtkActor> GetActor();
+
+	void BuildActor(); 
 
 private:
-	vtkSmartPointer<vtkActor> doActor(double s_x, double s_y, double x, double y, double d_x, double d_y);
-	void doGrid(double d_x, double d_y);
-	void init();
-
-private:
-	std::vector<vtkSmartPointer<vtkActor>> grid;
-	double x_ = 0.0;
-	double y_ = 0.0;
-	double d_ = 0.0;
+	vtkSmartPointer<vtkActor> actor;
+	double* position;	// coordinates in space
+	double* size;		// the sizes of the rectangle grid
+	double* cell;		// the cell size
 };
+

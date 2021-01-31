@@ -1,36 +1,52 @@
 #include "DoubleClickMouse.h"
 
+vtkStandardNewMacro(DoubleClickMouse);
+
 DoubleClickMouse::DoubleClickMouse() {
-	PreviousPosition = new int[2]{ 0, 0 };
-	CurrentPosition = new int[2]{ 0, 0 };
-};
 
-void DoubleClickMouse::SetPreviousPosition(int* position) {
-	this->PreviousPosition = position;
 }
 
-void DoubleClickMouse::SetCurrentPosition(int* position) {
-	this->CurrentPosition = position;
+void DoubleClickMouse::OnLeftDoubleClick() {
+    this->FindPokedRenderer(
+        this->Interactor->GetEventPosition()[0], this->Interactor->GetEventPosition()[1]);
+    if (this->CurrentRenderer == nullptr)
+    {
+        return;
+    }
+
+    this->GrabFocus(this->EventCallbackCommand);
 }
 
-int* DoubleClickMouse::GetCurrentPosition() {
-	return this->CurrentPosition;
-}
+void DoubleClickMouse::OnLeftButtonDown() { 
+    this->NumberOfClicks++;
 
-int* DoubleClickMouse::GetPreviousPosition() {
-	return this->PreviousPosition;
-}
+    if (NumberOfClicks == 1)
+        start = std::chrono::system_clock::now();
+    if (NumberOfClicks == 2)
+        end = std::chrono::system_clock::now();
 
+    int pickPosition[2];
+    this->GetInteractor()->GetEventPosition(pickPosition);
 
-bool DoubleClickMouse::isDoubleClick(int* pickPosition, std::chrono::system_clock::time_point start, std::chrono::system_clock::time_point end, int countOfClicks) {
-	int xdist = pickPosition[0] - this->PreviousPosition[0];
-	int ydist = pickPosition[1] - this->PreviousPosition[1];
+    int xdist = pickPosition[0] - this->PreviousPosition[0];
+    int ydist = pickPosition[1] - this->PreviousPosition[1];
 
-	std::chrono::duration<double> elapsed_seconds = end - start;
-	int moveDistance = (double)sqrt(xdist * xdist + ydist * ydist);
-	bool flag = false;
-	if (moveDistance < this->resetPixelDistance && (abs(elapsed_seconds.count()) < doubleClickTimeLimit) && countOfClicks == 2) {
-		flag = true;
-	}
-	return flag;
+    this->PreviousPosition[0] = pickPosition[0];
+    this->PreviousPosition[1] = pickPosition[1];
+
+    int moveDistance = (int)(xdist * xdist + ydist * ydist);
+    if (abs(std::chrono::duration<double>(end - start).count()) > doubleClickTimeLimit)
+    {
+        NumberOfClicks = 1;
+        start = std::chrono::system_clock::now();
+    }
+    if (moveDistance > (ResetPixelDistance * ResetPixelDistance))
+    {
+        NumberOfClicks = 1;
+    }
+    if (NumberOfClicks == 2)
+    {
+        OnLeftDoubleClick();
+        NumberOfClicks = 0;
+    }
 }
