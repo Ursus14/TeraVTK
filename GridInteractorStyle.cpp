@@ -1,3 +1,4 @@
+#include "GridInteractorStyle.h"
 vtkStandardNewMacro(GridInteractorStyle);
 
 GridInteractorStyle::GridInteractorStyle()
