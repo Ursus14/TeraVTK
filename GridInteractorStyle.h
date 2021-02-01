@@ -49,4 +49,3 @@ private:
 	vtkSmartPointer<vtkCamera> camera;
 	vtkSmartPointer<vtkRenderer> renderer;
 };
-

@@ -1,5 +1,3 @@
-#include "GridInteractorStyle.h"
-
 vtkStandardNewMacro(GridInteractorStyle);
 
 GridInteractorStyle::GridInteractorStyle()
@@ -123,6 +121,3 @@ double* GridInteractorStyle::GetCurrentMousePosition() {
 	world[1] = floor(world[1] / plane->GetCell()[1] + 0.5) * plane->GetCell()[1];
 	return world;
 }
-
-
-
