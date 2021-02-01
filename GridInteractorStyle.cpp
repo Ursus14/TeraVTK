@@ -42,37 +42,36 @@ void GridInteractorStyle::OnRightButtonUp()
 void GridInteractorStyle::OnLeftButtonDown()
 {
 	InteractorDoubleClick::OnLeftButtonDown();
-	prevPosition[0] = GetCurrentMousePosition()[0];
-	prevPosition[1] = GetCurrentMousePosition()[1];
-	line_->SetBeginPosition(prevPosition);
-	isAddLine = true;
-	Point* point = new Point(GetCurrentMousePosition());
-	renderer->AddActor(point->GetActor());
-	line_->build(GetCurrentMousePosition(),renderer);
+
+		prevPosition[0] = GetCurrentMousePosition()[0];
+		prevPosition[1] = GetCurrentMousePosition()[1];
+		line_->SetBeginPosition(prevPosition);
+		line_->build(GetCurrentMousePosition(), renderer);
+		isAddLine = true;
+		Point* point = new Point(GetCurrentMousePosition());
+		renderer->AddActor(point->GetActor());
+
+	
 	Interactor->GetRenderWindow()->Render();
 }
 
 void GridInteractorStyle::OnLeftButtonUp()
 {
-	double* world = GetCurrentMousePosition();
-	if (prevPosition[0] == world[0] && prevPosition[1] == world[1]) {
-
-	}
-	line_->SetBeginPosition(prevPosition);
-	line_->build(world, renderer);
-	Point* point = new Point();
-	renderer->AddActor(point->GetActor());
-
-	for (auto line : lines_) {
-		if (lines->intersect(line, line_)) {
-			Point* point_ = new Point(lines->getIntersectionPoint(line, line_));
-			renderer->AddActor(point_->GetActor());
+		line_->SetBeginPosition(prevPosition);
+		line_->build(GetCurrentMousePosition(), renderer);
+		Point* point = new Point(GetCurrentMousePosition());
+		renderer->AddActor(point->GetActor());
+		for (auto line : lines_) {
+			if (lines->intersect(line, line_)) {
+				Point* point_ = new Point(lines->getIntersectionPoint(line, line_));
+				renderer->AddActor(point_->GetActor());
+			}
 		}
-	}
-	lines_.push_back(line_);
+		lines_.push_back(line_);
 
-	Interactor->GetRenderWindow()->Render();
-	line_ = new Line(vtkSmartPointer<vtkActor>::New());
+		Interactor->GetRenderWindow()->Render();
+		line_ = new Line(vtkSmartPointer<vtkActor>::New());
+
 	isAddLine = false;
 }
 
@@ -81,13 +80,12 @@ void GridInteractorStyle::OnMouseMove()
 	vtkInteractorStyleTrackballCamera::OnMouseMove();
 	plane->HitTestingAtBorder(camera);
 	axes->RebuildAxes(camera, Interactor->GetRenderWindow()->GetSize());
-
+	if (isAddLine) {
+		line_->rebuild(GetCurrentMousePosition(), renderer);
+	}
 	//calculating the new position for the marker
 	int* sizeWin = Interactor->GetRenderWindow()->GetSize();
-	double* world = GetCurrentMousePosition();
-	if(isAddLine)
-		line_->rebuild(world, renderer);
-	marker->SetPosition(world);
+	marker->SetPosition(GetCurrentMousePosition());
 	marker->VisibilityOn();
 	renderer->RemoveActor(marker->GetActor());
 	renderer->AddActor(marker->GetActor());
@@ -105,15 +103,16 @@ void GridInteractorStyle::OnLeave()
 void GridInteractorStyle::OnLeftDoubleClick()
 {
 	InteractorDoubleClick::OnLeftDoubleClick();
-	double* world = GetCurrentMousePosition();
-	drawPoints.push_back(Point(world));
+	drawPoints.push_back(Point(GetCurrentMousePosition(),0.05));
+	drawPoints[drawPoints.size() - 1].SetColor(0,0,0);
 	renderer->AddActor(drawPoints[drawPoints.size()-1].GetActor());
+	
+	Interactor->GetRenderWindow()->Render();
 }
 
 double* GridInteractorStyle::GetCurrentMousePosition() {
 	double x = Interactor->GetEventPosition()[0];
 	double y = Interactor->GetEventPosition()[1];
-
 
 	vtkSmartPointer<vtkCoordinate> coordinate =
 		vtkSmartPointer<vtkCoordinate>::New();

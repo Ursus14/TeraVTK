@@ -6,7 +6,7 @@ Point::Point()
 
 	vtkSmartPointer<vtkRegularPolygonSource> point = vtkSmartPointer<vtkRegularPolygonSource>::New();
 	point->SetNumberOfSides(50);
-	point->SetRadius(0.05);
+	point->SetRadius(0.025);
 	point->SetCenter(0, 0, 0);
 
 
@@ -30,7 +30,7 @@ Point::Point(double* _position, double _radius)
 	vtkSmartPointer<vtkPolyDataMapper> mapper = vtkPolyDataMapper::New();
 	mapper->SetInputConnection(point->GetOutputPort());
 	actor->SetMapper(mapper);
-	actor->GetProperty()->SetColor(158 / 255.0, 77 / 255.0, 30 / 255.0);
+	actor->GetProperty()->SetColor(178 / 255.0, 97 / 255.0, 50 / 255.0);
 	actor->SetVisibility(1);
 
 	radius = _radius;
@@ -38,7 +38,12 @@ Point::Point(double* _position, double _radius)
 
 void Point::SetRadius(double _radius)
 {
-	actor->SetScale(_radius, _radius, 0);
+	vtkSmartPointer<vtkRegularPolygonSource> point = vtkSmartPointer<vtkRegularPolygonSource>::New();
+	point->SetNumberOfSides(50);
+	point->SetRadius(_radius);
+	point->SetCenter(actor->GetPosition());
+	vtkPolyDataMapper::SafeDownCast(actor->GetMapper())->SetInputConnection(point->GetOutputPort());
+	
 }
 
 void Point::SetPosition(double* position)

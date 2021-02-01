@@ -29,8 +29,8 @@ MainAxes::MainAxes()
 void MainAxes::RebuildAxes(vtkSmartPointer<vtkCamera> camera, int* sizewin)
 {
 
-	auto scaleX = (abs(camera->GetPosition()[0]) + 3.0 * camera->GetParallelScale()) / 12.0;
-	auto scaleY = (abs(camera->GetPosition()[1]) + 3.0 * camera->GetParallelScale()) / 12.0;
+	auto scaleX = (abs(camera->GetPosition()[0]) + 4.0 * camera->GetParallelScale());
+	auto scaleY = (abs(camera->GetPosition()[1]) + 4.0 * camera->GetParallelScale());
 
 	if (sizewin[0] / sizewin[1] > 1)
 		scaleX *= (sizewin[0] * 1.0) / sizewin[1];

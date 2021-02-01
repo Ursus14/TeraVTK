@@ -9,19 +9,19 @@ InteractorDoubleClick::InteractorDoubleClick()
 
 void InteractorDoubleClick::OnLeftDoubleClick()
 {
-    this->FindPokedRenderer(
-        this->Interactor->GetEventPosition()[0], this->Interactor->GetEventPosition()[1]);
-    if (this->CurrentRenderer == nullptr)
+    FindPokedRenderer(
+        Interactor->GetEventPosition()[0],Interactor->GetEventPosition()[1]);
+    if (CurrentRenderer == nullptr)
     {
         return;
     }
 
-    this->GrabFocus(this->EventCallbackCommand);
+    GrabFocus(EventCallbackCommand);
 }
 
 void InteractorDoubleClick::OnLeftButtonDown()
 { 
-    this->NumberOfClicks++;
+    NumberOfClicks++;
 
     if (NumberOfClicks == 1)
         start = std::chrono::system_clock::now();
@@ -51,5 +51,6 @@ void InteractorDoubleClick::OnLeftButtonDown()
     {
         OnLeftDoubleClick();
         NumberOfClicks = 0;
+        return;
     }
 }

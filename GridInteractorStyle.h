@@ -7,6 +7,7 @@
 #include "Lines.h"
 #include "BrokenLine.h"
 
+
 class VTKINTERACTIONSTYLE_EXPORT GridInteractorStyle: public InteractorDoubleClick
 {
 public:
