@@ -1,4 +1,4 @@
-#include "GridStyle.h"
+#include "GridInteractorStyle.h"
 
 vtkStandardNewMacro(gridStyle);
 
