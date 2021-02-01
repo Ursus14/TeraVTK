@@ -19,6 +19,10 @@ Point::Point()
 
 Point::Point(double* _position, double _radius)
 {
+	build(_position, _radius);
+}
+
+void Point::build(double* _position, double _radius) {
 	actor = vtkSmartPointer<vtkActor>::New();
 
 	vtkSmartPointer<vtkRegularPolygonSource> point = vtkSmartPointer<vtkRegularPolygonSource>::New();
@@ -34,6 +38,7 @@ Point::Point(double* _position, double _radius)
 	actor->SetVisibility(1);
 
 	radius = _radius;
+	
 }
 
 void Point::SetRadius(double _radius)
