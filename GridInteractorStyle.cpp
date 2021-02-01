@@ -1,240 +1,123 @@
-#include "GridInteractorStyle.h"
+vtkStandardNewMacro(GridInteractorStyle);
 
-vtkStandardNewMacro(gridStyle);
-
-gridStyle::gridStyle()
+GridInteractorStyle::GridInteractorStyle()
 {
-
 }
 
-gridStyle::gridStyle(vtkSmartPointer<vtkActor> axesX, vtkSmartPointer<vtkActor> axesY, vtkSmartPointer<vtkActor> axesMain, vtkSmartPointer<vtkActor> actorMarker, vtkSmartPointer<vtkRenderer> renderer)
+GridInteractorStyle::GridInteractorStyle(PlaneGrid* _plane, MainAxes* _axes, Point* _marker, std::vector<Point> _drawPoints, vtkSmartPointer<vtkCamera> _camera, vtkSmartPointer<vtkRenderer> _renderer)
 {
-	axesX_ = axesX;
-	axesY_ = axesY;
-	axesMain_ = axesMain;
-	camera_ = renderer->GetActiveCamera();
-	renderer_ = renderer;
-	actorMarker_ = actorMarker;
-	zPosition = camera_->GetPosition()[2];
+	plane = _plane;
+	camera = _camera;
+	renderer = _renderer;
+	axes = _axes;
+	marker = _marker;
+	drawPoints = _drawPoints;
 }
 
-void gridStyle::OnMouseMove()
+void GridInteractorStyle::OnMouseWheelBackward()
 {
-	vtkInteractorStyleTrackballCamera::OnMouseMove();
-    double x = Interactor->GetLastEventPosition()[0];
-	double y = Interactor->GetLastEventPosition()[1];
-	int* sizeWin = Interactor->GetRenderWindow()->GetSize();
+	vtkInteractorStyleTrackballCamera::OnMouseWheelBackward();
+	plane->RebuildPlane(camera, Interactor->GetRenderWindow()->GetSize());
+	axes->RebuildAxes(camera, Interactor->GetRenderWindow()->GetSize());
+}
+
+void GridInteractorStyle::OnMouseWheelForward()
+{
+	vtkInteractorStyleTrackballCamera::OnMouseWheelForward();
+	plane->RebuildPlane(camera, Interactor->GetRenderWindow()->GetSize());
+	axes->RebuildAxes(camera, Interactor->GetRenderWindow()->GetSize());
+}
+
+void GridInteractorStyle::OnRightButtonDown()
+{
+	vtkInteractorStyleTrackballCamera::OnMiddleButtonDown();
+}
+
+void GridInteractorStyle::OnRightButtonUp()
+{
+	vtkInteractorStyleTrackballCamera::OnMiddleButtonUp();
+}
+void GridInteractorStyle::OnLeftButtonDown()
+{
+	InteractorDoubleClick::OnLeftButtonDown();
+
+		prevPosition[0] = GetCurrentMousePosition()[0];
+		prevPosition[1] = GetCurrentMousePosition()[1];
+		line_->SetBeginPosition(prevPosition);
+		line_->build(GetCurrentMousePosition(), renderer);
+		isAddLine = true;
+		Point* point = new Point(GetCurrentMousePosition());
+		renderer->AddActor(point->GetActor());
 
 	
-	if ((sizeWin[0] <= x + 3) || (x <= 3) || (sizeWin[1] <= y + 3) || (y <= 3)) {
-		actorMarker_->SetVisibility(0);
+	Interactor->GetRenderWindow()->Render();
+}
+
+void GridInteractorStyle::OnLeftButtonUp()
+{
+		line_->SetBeginPosition(prevPosition);
+		line_->build(GetCurrentMousePosition(), renderer);
+		Point* point = new Point(GetCurrentMousePosition());
+		renderer->AddActor(point->GetActor());
+		for (auto line : lines_) {
+			if (lines->intersect(line, line_)) {
+				Point* point_ = new Point(lines->getIntersectionPoint(line, line_));
+				renderer->AddActor(point_->GetActor());
+			}
+		}
+		lines_.push_back(line_);
+
 		Interactor->GetRenderWindow()->Render();
+		line_ = new Line(vtkSmartPointer<vtkActor>::New());
+
+	isAddLine = false;
+}
+
+void GridInteractorStyle::OnMouseMove()
+{
+	vtkInteractorStyleTrackballCamera::OnMouseMove();
+	plane->HitTestingAtBorder(camera);
+	axes->RebuildAxes(camera, Interactor->GetRenderWindow()->GetSize());
+	if (isAddLine) {
+		line_->rebuild(GetCurrentMousePosition(), renderer);
 	}
-	else {
+	//calculating the new position for the marker
+	int* sizeWin = Interactor->GetRenderWindow()->GetSize();
+	marker->SetPosition(GetCurrentMousePosition());
+	marker->VisibilityOn();
+	renderer->RemoveActor(marker->GetActor());
+	renderer->AddActor(marker->GetActor());
+	Interactor->GetRenderWindow()->Render();
+
+}
+
+void GridInteractorStyle::OnLeave()
+{
+	vtkInteractorStyleTrackballCamera::OnLeave();
+	marker->VisibilityOff();
+	Interactor->GetRenderWindow()->Render();
+}
+
+void GridInteractorStyle::OnLeftDoubleClick()
+{
+	InteractorDoubleClick::OnLeftDoubleClick();
+	drawPoints.push_back(Point(GetCurrentMousePosition(),0.05));
+	drawPoints[drawPoints.size() - 1].SetColor(0,0,0);
+	renderer->AddActor(drawPoints[drawPoints.size()-1].GetActor());
+	
+	Interactor->GetRenderWindow()->Render();
+}
+
+double* GridInteractorStyle::GetCurrentMousePosition() {
+	double x = Interactor->GetEventPosition()[0];
+	double y = Interactor->GetEventPosition()[1];
+
 	vtkSmartPointer<vtkCoordinate> coordinate =
 		vtkSmartPointer<vtkCoordinate>::New();
 	coordinate->SetCoordinateSystemToDisplay();
 	coordinate->SetValue(x, y, 0);
 	double* world = coordinate->GetComputedWorldValue(Interactor->GetRenderWindow()->GetRenderers()->GetFirstRenderer());
-	//std::cout << "World coordinate: " << world[0] << ", " << world[1] << ", " << world[2] << std::endl;
-	world[0] = floor(world[0] / grid_CellX) * grid_CellX;
-	world[1] = floor(world[1] / grid_CellX) * grid_CellX;
-	
-	
-	
-	vtkSmartPointer<vtkRegularPolygonSource> marker = vtkSmartPointer<vtkRegularPolygonSource>::New();
-	marker->SetNumberOfSides(50);
-	marker->SetRadius(0.001);
-	marker->SetCenter(world[0], world[1], 0);
-
-	vtkPolyDataMapper::SafeDownCast(actorMarker_->GetMapper())->SetInputConnection(marker->GetOutputPort());
-	actorMarker_->SetVisibility(1);
-	Interactor->GetRenderWindow()->Render();
-	}
-	
-
-}
-
-void gridStyle::OnLeftButtonDown()
-{
-	flgMouse = false;
-	SetTimerDuration(1);
-	UseTimersOn();
-	vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
-	StartTimer();
-
-}
-
-void gridStyle::OnLeftButtonUp()
-{
-	
-	EndTimer();
-	UseTimersOff();
-	vtkInteractorStyleTrackballCamera::OnLeftButtonUp();
-	flgMouse = true;
-}
-
-void gridStyle::OnRightButtonDown()
-{
-	camera_->SetPosition(camera_->GetPosition()[0], camera_->GetPosition()[1], zPosition);
-
-}
-void gridStyle::OnMouseWheelBackward()
-{
-	flgMouse = false;
-	vtkInteractorStyleTrackballCamera::OnMouseWheelBackward();
-	zPosition = camera_->GetPosition()[2];
-
-	countBack++;
-	if (countBack % 5 == 0) {
-		countBack = 1;
-		
-		//grid_CellX *= 2;
-	}
-	OnTimer();
-	flg = true;
-	flgMouse = true;
-}
-
-void gridStyle::OnMouseWheelForward()
-{
-	flgMouse = false;;
-	vtkInteractorStyleTrackballCamera::OnMouseWheelForward();
-	zPosition = camera_->GetPosition()[2];
-
-	countForw++;
-	if (countForw % 5 == 0) {
-		countForw = 1;
-		
-		//grid_CellX /= 2;
-	}
-	OnTimer();
-	flg = true;
-	flgMouse = true;
-}
-
-void gridStyle::OnTimer()
-{
-	if (camera_->GetPosition()[2] / zPosition < 0.99) {
-		camera_->SetPosition(camera_->GetPosition()[0], camera_->GetPosition()[1], zPosition);
-	}
-
-
-
-	int* sizes = renderer_->GetSize();
-
-	auto cameraScale = camera_->GetParallelScale();
-	isPaneOnly_ = (cameraScale == lastCameraScale_);
-	lastCameraScale_ = cameraScale;
-	auto height = 2 * cameraScale;
-	worldToScreenCoeff_ = height / sizes[1];
-	auto width = worldToScreenCoeff_ * sizes[0];
-	viewportSize[0] = width * camera_->GetPosition()[2];
-	viewportSize[1] = height * camera_->GetPosition()[2];
-
-	auto scaleX = std::abs(camera_->GetFocalPoint()[0]) + viewportSize[0] / 2.0;
-	auto scaleY = std::abs(camera_->GetFocalPoint()[1]) + viewportSize[1] / 2.0;
-
-	double scale[3] = { scaleX, scaleY, 0 };
-	axesMain_->SetScale(scale);
-
-	if (!isPaneOnly_)
-	{
-		rebuildXlines();
-		rebuildYlines();
-	}
-	if (flg) {
-		rebuildXlines();
-		rebuildYlines();
-		flg = false;
-	}
-
-
-	double xScale[3] = { viewportSize[0] / 2 + grid_CellX, 1, 0 };
-	axesY_->SetScale(xScale);
-
-	double yScale[3] = { 1, viewportSize[1] / 2 + grid_CellX, 0 };
-	axesX_->SetScale(yScale);
-
-	double xmove = floor(camera_->GetFocalPoint()[0] / grid_CellX) * grid_CellX;
-	double ymove = floor(camera_->GetFocalPoint()[1] / grid_CellX) * grid_CellX;
-
-	xmove += fmod(grid_CellX, grid_CellX);
-	ymove += fmod(grid_CellX, grid_CellX);
-
-	// gridActor->SetPosition(xmove, ymove, 0);
-
-	axesX_->SetPosition(xmove, camera_->GetFocalPoint()[1], 0);
-	axesY_->SetPosition(camera_->GetFocalPoint()[0], ymove, 0);
-}
-
-void gridStyle::rebuildYlines()
-{
-	const int halfLinesNum = floor((viewportSize[1] / grid_CellX) / 2) + 1;
-
-	vtkSmartPointer<vtkPoints> points = vtkPoints::New();
-	points->Allocate(2 * halfLinesNum);
-
-	vtkSmartPointer<vtkCellArray> lines = vtkCellArray::New();
-
-	points->InsertNextPoint(-1, 0, 0);
-	points->InsertNextPoint(1, 0, 0);
-	vtkIdType cell[] = { 0, 1 };
-	lines->InsertNextCell(2, cell);
-	int num = 1;
-	for (int i = 1; i <= halfLinesNum; i++)
-	{
-		for (int j = -1; j <= 1; j += 2)
-		{
-			points->InsertNextPoint(-1, j * i * grid_CellX, 0);
-			points->InsertNextPoint(1, j * i * grid_CellX, 0);
-
-			vtkIdType cell[] = { 2 * num, 2 * num + 1 };
-			lines->InsertNextCell(2, cell);
-			num++;
-		}
-	}
-
-	vtkSmartPointer<vtkPolyData> polydata = vtkPolyData::New();
-	polydata->SetPoints(points);
-	polydata->SetLines(lines);
-	vtkPolyDataMapper::SafeDownCast(axesY_->GetMapper())->SetInputData(polydata);
-}
-
-void gridStyle::rebuildXlines()
-{
-	const int halfLinesNum = floor((viewportSize[0] / grid_CellX) / 2) + 1;
-
-	vtkSmartPointer<vtkPoints> points = vtkPoints::New();
-	points->Allocate(2 * halfLinesNum);
-
-	vtkSmartPointer<vtkCellArray> lines = vtkCellArray::New();
-
-	points->InsertNextPoint(0, -1, 0);
-	points->InsertNextPoint(0, 1, 0);
-	vtkIdType cell[] = { 0, 1 };
-	lines->InsertNextCell(2, cell);
-	int num = 1;
-	for (int i = 1; i <= halfLinesNum; i++)
-	{
-		for (int j = -1; j <= 1; j += 2)
-		{
-			points->InsertNextPoint(j * i * grid_CellX, -1, 0);
-			points->InsertNextPoint(j * i * grid_CellX, 1, 0);
-
-			vtkIdType cell[] = { 2 * num, 2 * num + 1 };
-			lines->InsertNextCell(2, cell);
-			num++;
-		}
-	}
-
-	vtkSmartPointer<vtkPolyData> polydata = vtkPolyData::New();
-	polydata->SetPoints(points);
-	polydata->SetLines(lines);
-	vtkPolyDataMapper::SafeDownCast(axesX_->GetMapper())->SetInputData(polydata);
-}
-
-void gridStyle::rebuildMarker(double* coordinate)
-{
-
+	world[0] = floor(world[0] / plane->GetCell()[0] + 0.5) * plane->GetCell()[0];
+	world[1] = floor(world[1] / plane->GetCell()[1] + 0.5) * plane->GetCell()[1];
+	return world;
 }

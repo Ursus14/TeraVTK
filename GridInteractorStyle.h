@@ -1,58 +1,51 @@
 #pragma once
-#include <vtkInteractorStyleTrackballCamera.h>
-#include <vtkSmartPointer.h>
-#include <vtkPoints.h>
-#include <vtkCellArray.h>
-#include <vtkPolyData.h>
-#include <vtkPolyDataMapper.h>
-#include <vtkCamera.h>
-#include <vtkRenderer.h>
-#include <vtkSetGet.h>
-#include <vtkObjectFactory.h>
+#include "InteractorDoubleClick.h"
+#include "Grid.h"
+#include "PlaneGrid.h"
+#include "MainAxes.h"
+#include "Point.h"
+#include "Lines.h"
+#include "BrokenLine.h"
 
 
-
-class displayGridStyle : public vtkInteractorStyleTrackballCamera
+class VTKINTERACTIONSTYLE_EXPORT GridInteractorStyle: public InteractorDoubleClick
 {
 public:
-	static displayGridStyle* New();
-	vtkTypeMacro(displayGridStyle, vtkInteractorStyleTrackballCamera);
-	displayGridStyle();
-	displayGridStyle(
-		vtkSmartPointer<vtkActor> axesX, 
-		vtkSmartPointer<vtkActor> axesY, 
-		vtkSmartPointer<vtkActor> axesMain, 
-		vtkSmartPointer<vtkCamera> camera, 
-		vtkSmartPointer<vtkRenderer> renderer);
+	static GridInteractorStyle* New();
+	vtkTypeMacro(GridInteractorStyle, InteractorDoubleClick);
+	GridInteractorStyle();
+	GridInteractorStyle(PlaneGrid* _plane, 
+						MainAxes* _axes,
+						Point* _marker, 
+						std::vector<Point> _drawPoints, 
+						vtkSmartPointer<vtkCamera> _camera, 
+						vtkSmartPointer<vtkRenderer> _renderer);
+
+	double* GetCurrentMousePosition();
 
 private:
-	virtual void OnLeftButtonDown();
-	virtual void OnLeftButtonUp();
 	virtual void OnMouseWheelBackward();
 	virtual void OnMouseWheelForward();
-	virtual void OnTimer();
-	void rebuildYlines();
-	void rebuildXlines();
+	virtual void OnRightButtonDown();
+	virtual void OnRightButtonUp();
+	virtual void OnLeftButtonDown();
+	virtual void OnLeftButtonUp();
+	virtual void OnMouseMove();
+	virtual void OnLeave();
+	virtual void OnLeftDoubleClick();
 
-private:
-	
-	bool flg = false;
-	int countBack = 1, countForw = 1;
-	double grid_CellX = 0.05;
-	double grid_CellY = 0.05;
-	double viewportSize[2];
-	int cellScreenWidth_ = 0;
-	double worldToScreenCoeff_ = 0;
-	double  lastCameraScale_ = 0;
-	bool isPaneOnly_ = false;
-	double zPosition;
-
-	vtkSmartPointer<vtkActor> axesY_ = vtkSmartPointer<vtkActor>::New();
-	vtkSmartPointer<vtkActor> axesX_ = vtkSmartPointer<vtkActor>::New();
-	vtkSmartPointer<vtkCamera> camera_ = vtkSmartPointer<vtkCamera>::New();
-	vtkSmartPointer<vtkActor> axesMain_ = vtkSmartPointer<vtkActor>::New();
-	vtkSmartPointer<vtkRenderer> renderer_ = vtkSmartPointer<vtkRenderer>::New();
+	//---------------------------------------
+	bool isAddLine = false;
+	double prevPosition[2]{ 0.0, 0.0 };
+	std::vector<Line*> lines_;
+	Line* line_ = new Line(vtkSmartPointer<vtkActor>::New());
+	Lines* lines = new Lines();
+	BrokenLine* brokenLine_ = new BrokenLine();
+	//--------------------------------------
+	PlaneGrid* plane;
+	MainAxes* axes;
+	Point* marker;
+	std::vector<Point> drawPoints;
+	vtkSmartPointer<vtkCamera> camera;
+	vtkSmartPointer<vtkRenderer> renderer;
 };
-
-
-
