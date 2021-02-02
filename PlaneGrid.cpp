@@ -16,6 +16,38 @@ PlaneGrid::PlaneGrid()
 	borderline = new double[4]{ pGrids[0].GetPosition()[0],pGrids[1].GetPosition()[1] ,pGrids[2].GetPosition()[0] , pGrids[3].GetPosition()[1]};
 }
 
+PlaneGrid::PlaneGrid(double* cell, int* sizewin, double parallelScale)
+{
+	double* size = new double[2]{ 4.0* parallelScale, 4.0* parallelScale };
+	
+
+	// in case the window is not square
+	if (sizewin[0] / sizewin[1] > 1)
+		size[0] *= (sizewin[0] * 1.0) / sizewin[1];
+	else
+		size[1] *= (sizewin[1] * 1.0) / sizewin[0];
+
+	// checking the conditions for the grid size
+	for (int i = 0; i < 2; i++) {
+		if (fmod(size[i], cell[i]) != 0)
+			size[i] = floor(size[i] / cell[i])* cell[i] + cell[i];
+
+		if (fmod(size[i] / cell[i], 2.0) != 0)
+			size[i] += cell[i];
+	}
+	double* pos = new double[3]{ - size[0] / 2.0 ,size[1] / 2.0, 0 };
+
+	pGrids[0] = Grid(pos, size, cell);
+	pos[0] = size[0] / 2.0;
+	pGrids[1] = Grid(pos, size, cell);
+	pos[1] = - size[1] / 2.0;
+	pGrids[2] = Grid(pos, size, cell);
+	pos[0] =  - size[0] / 2.0;
+	pGrids[3] = Grid(pos, size, cell);
+
+	borderline = new double[4]{ pGrids[0].GetPosition()[0],pGrids[1].GetPosition()[1] ,pGrids[2].GetPosition()[0] , pGrids[3].GetPosition()[1] };
+}
+
 
 void PlaneGrid::RecountBorderline()
 {
@@ -39,7 +71,7 @@ void PlaneGrid::RebuildPlane(vtkCamera* camera, int* sizewin)
 	// checking the conditions for the grid size
 	for (int i = 0; i < 2; i++) {
 		if (fmod(newsize[i], pGrids->GetCell()[i]) != 0)
-			newsize[i] = floor(newsize[i] / pGrids->GetCell()[i]) + pGrids->GetCell()[i];
+			newsize[i] = floor(newsize[i] / pGrids->GetCell()[i])* pGrids->GetCell()[i] + pGrids->GetCell()[i];
 
 		if (fmod(newsize[i] / pGrids->GetCell()[i], 2.0) != 0)
 			newsize[i] += pGrids->GetCell()[i];
@@ -48,15 +80,32 @@ void PlaneGrid::RebuildPlane(vtkCamera* camera, int* sizewin)
 	for (int i = 0; i < 4; i++) {
 		pGrids[i].SetSize(newsize);
 	}
+	/**
+	pGrids[sequence[0]].SetPosition(floor((camera->GetPosition()[0] - newsize[0] / 2.0) / pGrids->GetCell()[0]+0.5) * pGrids->GetCell()[0],
+									floor((camera->GetPosition()[1] + newsize[1] / 2.0) / pGrids->GetCell()[1] + 0.5) * pGrids->GetCell()[1]);
 
-	pGrids[sequence[0]].SetPosition(floor((camera->GetPosition()[0] - newsize[0] / 2.0) / pGrids->GetCell()[0]) * pGrids->GetCell()[0],
-									floor((camera->GetPosition()[1] + newsize[1] / 2.0) / pGrids->GetCell()[1]) * pGrids->GetCell()[1]);
-	pGrids[sequence[1]].SetPosition(floor((camera->GetPosition()[0] + newsize[0] / 2.0) / pGrids->GetCell()[0]) * pGrids->GetCell()[0],
-									floor((camera->GetPosition()[1] + newsize[1] / 2.0) / pGrids->GetCell()[1]) * pGrids->GetCell()[1]);
-	pGrids[sequence[2]].SetPosition(floor((camera->GetPosition()[0] + newsize[0] / 2.0) / pGrids->GetCell()[0]) * pGrids->GetCell()[0],
-									floor((camera->GetPosition()[1] - newsize[1] / 2.0) / pGrids->GetCell()[1]) * pGrids->GetCell()[1]);
-	pGrids[sequence[3]].SetPosition(floor((camera->GetPosition()[0] - newsize[0] / 2.0) / pGrids->GetCell()[0]) * pGrids->GetCell()[0],
-									floor((camera->GetPosition()[1] - newsize[1] / 2.0) / pGrids->GetCell()[1]) * pGrids->GetCell()[1]);
+	pGrids[sequence[1]].SetPosition(floor((camera->GetPosition()[0] + newsize[0] / 2.0) / pGrids->GetCell()[0] + 0.5) * pGrids->GetCell()[0],
+									floor((camera->GetPosition()[1] + newsize[1] / 2.0) / pGrids->GetCell()[1] + 0.5) * pGrids->GetCell()[1]);
+
+	pGrids[sequence[2]].SetPosition(floor((camera->GetPosition()[0] + newsize[0] / 2.0) / pGrids->GetCell()[0] + 0.5) * pGrids->GetCell()[0],
+									floor((camera->GetPosition()[1] - newsize[1] / 2.0) / pGrids->GetCell()[1] + 0.5) * pGrids->GetCell()[1]);
+
+	pGrids[sequence[3]].SetPosition(floor((camera->GetPosition()[0] - newsize[0] / 2.0) / pGrids->GetCell()[0] + 0.5) * pGrids->GetCell()[0],
+									floor((camera->GetPosition()[1] - newsize[1] / 2.0) / pGrids->GetCell()[1] + 0.5) * pGrids->GetCell()[1]);
+	*/
+	//
+	pGrids[sequence[0]].SetPosition(floor(camera->GetPosition()[0] / pGrids->GetCell()[0]) * pGrids->GetCell()[0] - newsize[0] / 2.0,
+									floor(camera->GetPosition()[1] / pGrids->GetCell()[1]) * pGrids->GetCell()[1] + newsize[1] / 2.0);
+
+	pGrids[sequence[1]].SetPosition(floor(camera->GetPosition()[0] / pGrids->GetCell()[0]) * pGrids->GetCell()[0] + newsize[0] / 2.0,
+									floor(camera->GetPosition()[1] / pGrids->GetCell()[1]) * pGrids->GetCell()[1] + newsize[1] / 2.0);
+
+	pGrids[sequence[2]].SetPosition(floor(camera->GetPosition()[0] / pGrids->GetCell()[0]) * pGrids->GetCell()[0] + newsize[0] / 2.0,
+									floor(camera->GetPosition()[1] / pGrids->GetCell()[1]) * pGrids->GetCell()[1] - newsize[1] / 2.0);
+
+	pGrids[sequence[3]].SetPosition(floor(camera->GetPosition()[0] / pGrids->GetCell()[0]) * pGrids->GetCell()[0] - newsize[0] / 2.0,
+									floor(camera->GetPosition()[1] / pGrids->GetCell()[1]) * pGrids->GetCell()[1] - newsize[1] / 2.0);
+
 	RecountBorderline();
 }
 

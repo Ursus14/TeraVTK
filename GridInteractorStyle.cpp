@@ -47,7 +47,7 @@ void GridInteractorStyle::OnLeftButtonDown()
 		line_->SetBeginPosition(prevPosition);
 		line_->build(GetCurrentMousePosition(), renderer);
 		isAddLine = true;
-		Point* point = new Point(GetCurrentMousePosition());
+		Point* point = new Point(GetCurrentMousePosition(),0.05*plane->GetCell()[0]);
 		renderer->AddActor(point->GetActor());
 
 	
@@ -58,11 +58,11 @@ void GridInteractorStyle::OnLeftButtonUp()
 {
 		line_->SetBeginPosition(prevPosition);
 		line_->build(GetCurrentMousePosition(), renderer);
-		Point* point = new Point(GetCurrentMousePosition());
+		Point* point = new Point(GetCurrentMousePosition(), 0.05 * plane->GetCell()[0]);
 		renderer->AddActor(point->GetActor());
 		for (auto line : lines_) {
 			if (lines->intersect(line, line_)) {
-				Point* point_ = new Point(lines->getIntersectionPoint(line, line_));
+				Point* point_ = new Point(lines->getIntersectionPoint(line, line_), 0.05 * plane->GetCell()[0]);
 				renderer->AddActor(point_->GetActor());
 			}
 		}
@@ -102,7 +102,7 @@ void GridInteractorStyle::OnLeave()
 void GridInteractorStyle::OnLeftDoubleClick()
 {
 	InteractorDoubleClick::OnLeftDoubleClick();
-	drawPoints.push_back(Point(GetCurrentMousePosition(),0.05));
+	drawPoints.push_back(Point(GetCurrentMousePosition(),0.05 * plane->GetCell()[0]));
 	drawPoints[drawPoints.size() - 1].SetColor(0,0,0);
 	renderer->AddActor(drawPoints[drawPoints.size()-1].GetActor());
 	

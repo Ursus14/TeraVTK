@@ -11,6 +11,7 @@ class Point
 {
 public:
 	Point();
+	Point(double _radius);
 	Point(double* _position, double _radius = 0.025);
 	void SetRadius(double _radius);
 	void SetPosition(double* position);
