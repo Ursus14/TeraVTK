@@ -41,9 +41,13 @@ int main(int, char* [])
 	vtkSmartPointer<vtkCamera> camera = vtkSmartPointer<vtkCamera>::New();
 	vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
 	
-	PlaneGrid* plane = new PlaneGrid();
-	MainAxes* axes = new MainAxes();
-	Point* marker = new Point();
+	double cell[2] = { 0.1,0.1 };
+	double parallelScale = 5;
+	int sizewin[2] = { 700,400 };
+
+	PlaneGrid* plane = new PlaneGrid(cell,sizewin,parallelScale);
+	MainAxes* axes = new MainAxes(sizewin,parallelScale);
+	Point* marker = new Point(0.05*cell[0]);
 	std::vector<Point> drawPoints;
 	
 	renderer->AddActor(plane->GetActor(0));
@@ -63,7 +67,7 @@ int main(int, char* [])
 	renderWindowInteractor->SetRenderWindow(renderwindow);
 
 	camera->ParallelProjectionOn();
-	camera->SetParallelScale(4.0);
+	camera->SetParallelScale(parallelScale);
 
 	vtkSmartPointer<vtkCallbackCommand> modifiedcallback =
 		vtkSmartPointer<vtkCallbackCommand>::New();
@@ -81,7 +85,7 @@ int main(int, char* [])
 		vtkSmartPointer<GridInteractorStyle>::Take(newGrid);
 	renderWindowInteractor->SetInteractorStyle(style);
 
-	renderwindow->SetSize(600,600);
+	renderwindow->SetSize(sizewin);
 	renderwindow->Render();
 	renderWindowInteractor->Initialize();
 	renderWindowInteractor->EnableRenderOn();
