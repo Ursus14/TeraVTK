@@ -61,7 +61,7 @@ int main(int, char* [])
 	vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor =
 		vtkSmartPointer<vtkRenderWindowInteractor>::New();
 	renderWindowInteractor->SetRenderWindow(renderwindow);
-
+	
 	camera->ParallelProjectionOn();
 	camera->SetParallelScale(8.0);
 

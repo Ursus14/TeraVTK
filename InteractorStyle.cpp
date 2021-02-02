@@ -42,7 +42,7 @@ void InteractorStyle::OnLeftButtonDown() {
 	isAddLine = true;
 	Point* point = new Point(GetCurrentMousePosition());
 	renderer->AddActor(point->GetActor());
-	line_->build(GetCurrentMousePosition(),renderer);
+	line_->build(GetCurrentMousePosition(), renderer);
 	Interactor->GetRenderWindow()->Render();
 }
 
@@ -101,14 +101,14 @@ void InteractorStyle::OnLeftDoubleClick() {
 	DoubleClickMouse::OnLeftDoubleClick();
 	double* world = GetCurrentMousePosition();
 	drawPoints.push_back(Point(world));
-	renderer->AddActor(drawPoints[drawPoints.size()-1].GetActor());
+	renderer->AddActor(drawPoints[drawPoints.size() - 1].GetActor());
 }
 
 double* InteractorStyle::GetCurrentMousePosition() {
 	double x = Interactor->GetEventPosition()[0];
 	double y = Interactor->GetEventPosition()[1];
 
- 	vtkSmartPointer<vtkCoordinate> coordinate =
+	vtkSmartPointer<vtkCoordinate> coordinate =
 		vtkSmartPointer<vtkCoordinate>::New();
 	coordinate->SetCoordinateSystemToDisplay();
 	coordinate->SetValue(x, y, 0);
@@ -155,17 +155,17 @@ void InteractorStyle::followToLine(double* mousePosition) {
 	double yCam = camera->GetPosition()[1];
 	double zCam = camera->GetPosition()[2];
 
-	if (abs(xmin - x) < 2.0) {
-		camera->SetPosition(xCam - 0.2, yCam, zCam);
+	if (abs(xmin - x) <  2.0 && x >  xmin) {
+		camera->SetPosition(xCam - 0.1, yCam, zCam);
 	}
-	else if (abs(xmax - x) < 2.0) {
-		camera->SetPosition(xCam + 0.2, yCam, zCam);
+	else if (abs(xmax - x) < 2.0 && x < xmax) {
+		camera->SetPosition(xCam + 0.1, yCam, zCam);
 	}
-	else if (abs(ymin - y) < 2.0) {
-		camera->SetPosition(xCam, yCam - 0.2, zCam);
+	else if (abs(ymin - y) < 2.0 && y > ymin) {
+		camera->SetPosition(xCam, yCam - 0.1, zCam);
 	}
-	else if (abs(ymax - y) < 2.0) {
-		camera->SetPosition(xCam, yCam + 0.2, zCam);
+	else if (abs(ymax - y) < 2.0 && y < ymax) {
+		camera->SetPosition(xCam, yCam + 0.1, zCam);
 	}
 
 }

@@ -33,9 +33,12 @@ private:
 	virtual void OnMouseMove();
 	virtual void OnLeave();
 	virtual void OnLeftDoubleClick();
+	//virtual void OnTimer();
 
 	//---------------------------------------
 	bool isAddLine = false;
+	double dx = 0;
+	double dy = 0;
 	double prevPosition[2]{ 0.0, 0.0 };
 	std::vector<Line*> lines_;
 	Line* line_ = new Line(vtkSmartPointer<vtkActor>::New());
