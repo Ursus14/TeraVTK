@@ -10,6 +10,7 @@ class PlaneGrid
 {
 public:
 	PlaneGrid();
+	PlaneGrid(double* cell, int* sizewin, double parallelScale);
 	void RecountBorderline(); 
 	void RebuildPlane(vtkCamera* camera, int* sizewin);
 	void HitTestingAtBorder(vtkCamera* camera);

@@ -84,8 +84,8 @@ void Grid::BuildActor()
 		points->InsertNextPoint(-size[0]/2, i , 0);
 		points->InsertNextPoint(size[0]/2, i , 0);
 
-		vtkIdType cell[] = { 2 * num, 2 * num + 1 };
-		lines->InsertNextCell(2, cell);
+		vtkIdType tcell[] = { 2 * num, 2 * num + 1 };
+		lines->InsertNextCell(2, tcell);
 		num++;
 	}
 
@@ -93,8 +93,8 @@ void Grid::BuildActor()
 		points->InsertNextPoint(i, -size[1]/2, 0);
 		points->InsertNextPoint(i , size[1]/2, 0);
 
-		vtkIdType cell[] = { 2 * num, 2 * num + 1 };
-		lines->InsertNextCell(2, cell);
+		vtkIdType tcell[] = { 2 * num, 2 * num + 1 };
+		lines->InsertNextCell(2, tcell);
 		num++;
 	}
 

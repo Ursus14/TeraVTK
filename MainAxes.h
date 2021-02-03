@@ -11,6 +11,7 @@ class MainAxes
 {
 public:
 	MainAxes();
+	MainAxes(int* sizewin, double parallelScale);
 	void RebuildAxes(vtkSmartPointer<vtkCamera> camera, int* sizewin);
 	vtkSmartPointer<vtkActor> GetActor();
 
