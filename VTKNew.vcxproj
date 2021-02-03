@@ -1,31 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|Win32">
-      <Configuration>Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|Win32">
-      <Configuration>Release</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug|x64">
-      <Configuration>Debug</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|x64">
-      <Configuration>Release</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="BrokenLine.cpp" />
-    <ClCompile Include="Grid.cpp" />
-    <ClCompile Include="GridInteractorStyle.cpp" />
-    <ClCompile Include="InteractorDoubleClick.cpp" />
-    <ClCompile Include="Line.cpp" />
-    <ClCompile Include="Lines.cpp" />
-    <ClCompile Include="main.cpp" />
+ <ItemGroup Label="ProjectConfigurations">
+ <ProjectConfiguration Include="Debug|Win32">
+ <Configuration>Debug</Configuration>
+ <Platform>Win32</Platform>
+ </ProjectConfiguration>
+ <ProjectConfiguration Include="Release|Win32">
+ <Configuration>Release</Configuration>
+ <Platform>Win32</Platform>
+ </ProjectConfiguration>
+ <ProjectConfiguration Include="Debug|x64">
+ <Configuration>Debug</Configuration>
+ <Platform>x64</Platform>
+ </ProjectConfiguration>
+ <ProjectConfiguration Include="Release|x64">
+ <Configuration>Release</Configuration>
+ <Platform>x64</Platform>
+ </ProjectConfiguration>
+ </ItemGroup>
+ <ItemGroup>
+ <ClCompile Include="BrokenLine.cpp" />
+ <ClCompile Include="Grid.cpp" />
+ <ClCompile Include="GridInteractorStyle.cpp" />
+ <ClCompile Include="InteractorDoubleClick.cpp" />
+ <ClCompile Include="Line.cpp" />
+ <ClCompile Include="Lines.cpp" />
+ <ClCompile Include="main.cpp" />
     <ClCompile Include="MainAxes.cpp" />
     <ClCompile Include="PlaneGrid.cpp" />
     <ClCompile Include="Point.cpp" />
@@ -106,13 +106,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(ProjectDir)\include_static;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\VTK\lib_static\vc142\x64\Debug;$(LibraryPath)</LibraryPath>
-    <ExecutablePath>D:\VTK\lib_static\vc142\x64\Debug;$(ExecutablePath)</ExecutablePath>
+    <LibraryPath>$(ProjectDir)\lib_static\vc142\x64\Debug;$(LibraryPath)</LibraryPath>
+    <ExecutablePath>$(ProjectDir)\lib_static\vc142\x64\Debug;$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(ProjectDir)\include_static;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\VTK\lib_static\vc142\x64\Release;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)\lib_static\vc142\x64\Release;$(LibraryPath)</LibraryPath>
     <ExecutablePath>C:\Windows\SysWOW64;C:\Windows\System32;$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
