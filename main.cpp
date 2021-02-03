@@ -43,7 +43,7 @@ int main(int, char* [])
 	
 	double cell[2] = { 0.1,0.1 };
 	double parallelScale = 5;
-	int sizewin[2] = { 700,400 };
+	int sizewin[2] = { 700,600 };
 
 	PlaneGrid* plane = new PlaneGrid(cell,sizewin,parallelScale);
 	MainAxes* axes = new MainAxes(sizewin,parallelScale);
