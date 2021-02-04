@@ -49,35 +49,30 @@ void PlaneGrid::RecountBorderline() {
 
 void PlaneGrid::RebuildPlane(vtkCamera* camera, int* sizewin) {
 	double zoom = camera->GetParallelScale();
-	double* newsize = new double[2]{zoom*4.0, zoom*4.0};
-
+	double* newsize = new double[2]{ zoom * 4.0, zoom * 4.0 };
 	// in case the window is not square
 	if (sizewin[0] / sizewin[1] > 1)
 		newsize[0] *= (sizewin[0] * 1.0) / sizewin[1];
 	else
 		newsize[1] *= (sizewin[1] * 1.0) / sizewin[0];
-
 	// checking the conditions for the grid size
 	for (int i = 0; i < 2; i++) {
 		if (fmod(newsize[i], pGrids->GetCell()[i]) != 0)
-			newsize[i] = floor(newsize[i] / pGrids->GetCell()[i]) + pGrids->GetCell()[i];
-
+			newsize[i] = floor(newsize[i] / pGrids->GetCell()[i]) * pGrids->GetCell()[i] + pGrids->GetCell()[i];
 		if (fmod(newsize[i] / pGrids->GetCell()[i], 2.0) != 0)
 			newsize[i] += pGrids->GetCell()[i];
 	}
-
 	for (int i = 0; i < 4; i++) {
 		pGrids[i].SetSize(newsize);
 	}
-
-	pGrids[sequence[0]].SetPosition(floor((camera->GetPosition()[0] - newsize[0] / 2.0) / pGrids->GetCell()[0]) * pGrids->GetCell()[0],
-									floor((camera->GetPosition()[1] + newsize[1] / 2.0) / pGrids->GetCell()[1]) * pGrids->GetCell()[1]);
-	pGrids[sequence[1]].SetPosition(floor((camera->GetPosition()[0] + newsize[0] / 2.0) / pGrids->GetCell()[0]) * pGrids->GetCell()[0],
-									floor((camera->GetPosition()[1] + newsize[1] / 2.0) / pGrids->GetCell()[1]) * pGrids->GetCell()[1]);
-	pGrids[sequence[2]].SetPosition(floor((camera->GetPosition()[0] + newsize[0] / 2.0) / pGrids->GetCell()[0]) * pGrids->GetCell()[0],
-									floor((camera->GetPosition()[1] - newsize[1] / 2.0) / pGrids->GetCell()[1]) * pGrids->GetCell()[1]);
-	pGrids[sequence[3]].SetPosition(floor((camera->GetPosition()[0] - newsize[0] / 2.0) / pGrids->GetCell()[0]) * pGrids->GetCell()[0],
-									floor((camera->GetPosition()[1] - newsize[1] / 2.0) / pGrids->GetCell()[1]) * pGrids->GetCell()[1]);
+	pGrids[sequence[0]].SetPosition(floor(camera->GetPosition()[0] / pGrids->GetCell()[0]) * pGrids->GetCell()[0] - newsize[0] / 2.0,
+		floor(camera->GetPosition()[1] / pGrids->GetCell()[1]) * pGrids->GetCell()[1] + newsize[1] / 2.0);
+	pGrids[sequence[1]].SetPosition(floor(camera->GetPosition()[0] / pGrids->GetCell()[0]) * pGrids->GetCell()[0] + newsize[0] / 2.0,
+		floor(camera->GetPosition()[1] / pGrids->GetCell()[1]) * pGrids->GetCell()[1] + newsize[1] / 2.0);
+	pGrids[sequence[2]].SetPosition(floor(camera->GetPosition()[0] / pGrids->GetCell()[0]) * pGrids->GetCell()[0] + newsize[0] / 2.0,
+		floor(camera->GetPosition()[1] / pGrids->GetCell()[1]) * pGrids->GetCell()[1] - newsize[1] / 2.0);
+	pGrids[sequence[3]].SetPosition(floor(camera->GetPosition()[0] / pGrids->GetCell()[0]) * pGrids->GetCell()[0] - newsize[0] / 2.0,
+		floor(camera->GetPosition()[1] / pGrids->GetCell()[1]) * pGrids->GetCell()[1] - newsize[1] / 2.0);
 	RecountBorderline();
 }
 
@@ -113,8 +108,7 @@ double* PlaneGrid::GetCell()
 	return pGrids[0].GetCell();
 }
 
-void PlaneGrid::FlippingGrids(int borderNumber)
-{
+void PlaneGrid::FlippingGrids(int borderNumber) {
 	int temp = 0;
 	if (borderNumber == 0) {
 		pGrids[sequence[1]].SetPosition(pGrids[sequence[1]].GetPosition()[0] - 2 * pGrids[sequence[1]].GetSize()[0], pGrids[sequence[1]].GetPosition()[1]);
@@ -171,8 +165,7 @@ void PlaneGrid::FlippingGrids(int borderNumber)
 
 }
 
-vtkSmartPointer<vtkActor> PlaneGrid::GetActor(int idx)
-{
+vtkSmartPointer<vtkActor> PlaneGrid::GetActor(int idx) {
 	return pGrids[idx].GetActor();
 }
 
