@@ -80,7 +80,7 @@ int main(int, char* [])
 	renderer->AutomaticLightCreationOff();
 	renderer->GradientEnvironmentalBGOff();
 	
-	GridInteractorStyle* newGrid = new GridInteractorStyle(plane, axes,marker, drawPoints, camera, renderer);
+	GridInteractorStyle* newGrid = new GridInteractorStyle(plane, axes,marker, drawPoints, renderer);
 
 	vtkSmartPointer<GridInteractorStyle> style =
 		vtkSmartPointer<GridInteractorStyle>::Take(newGrid);

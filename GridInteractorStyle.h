@@ -19,7 +19,6 @@ public:
 						MainAxes* _axes,
 						Point* _marker, 
 						std::vector<Point> _drawPoints, 
-						vtkSmartPointer<vtkCamera> _camera, 
 						vtkSmartPointer<vtkRenderer> _renderer);
 
 	double* GetCurrentMousePosition();
@@ -51,6 +50,5 @@ private:
 	MainAxes* axes;
 	Point* marker;
 	std::vector<Point> drawPoints;
-	vtkSmartPointer<vtkCamera> camera;
 	vtkSmartPointer<vtkRenderer> renderer;
 };

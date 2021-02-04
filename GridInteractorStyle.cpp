@@ -5,10 +5,9 @@ GridInteractorStyle::GridInteractorStyle()
 {
 }
 
-GridInteractorStyle::GridInteractorStyle(PlaneGrid* _plane, MainAxes* _axes, Point* _marker, std::vector<Point> _drawPoints, vtkSmartPointer<vtkCamera> _camera, vtkSmartPointer<vtkRenderer> _renderer)
+GridInteractorStyle::GridInteractorStyle(PlaneGrid* _plane, MainAxes* _axes, Point* _marker, std::vector<Point> _drawPoints, vtkSmartPointer<vtkRenderer> _renderer)
 {
 	plane = _plane;
-	camera = _camera;
 	renderer = _renderer;
 	axes = _axes;
 	marker = _marker;
@@ -18,15 +17,15 @@ GridInteractorStyle::GridInteractorStyle(PlaneGrid* _plane, MainAxes* _axes, Poi
 void GridInteractorStyle::OnMouseWheelBackward()
 {
 	vtkInteractorStyleTrackballCamera::OnMouseWheelBackward();
-	plane->RebuildPlane(camera, Interactor->GetRenderWindow()->GetSize());
-	axes->RebuildAxes(camera, Interactor->GetRenderWindow()->GetSize());
+	plane->RebuildPlane(renderer->GetActiveCamera(), Interactor->GetRenderWindow()->GetSize());
+	axes->RebuildAxes(renderer->GetActiveCamera(), Interactor->GetRenderWindow()->GetSize());
 }
 
 void GridInteractorStyle::OnMouseWheelForward()
 {
 	vtkInteractorStyleTrackballCamera::OnMouseWheelForward();
-	plane->RebuildPlane(camera, Interactor->GetRenderWindow()->GetSize());
-	axes->RebuildAxes(camera, Interactor->GetRenderWindow()->GetSize());
+	plane->RebuildPlane(renderer->GetActiveCamera(), Interactor->GetRenderWindow()->GetSize());
+	axes->RebuildAxes(renderer->GetActiveCamera(), Interactor->GetRenderWindow()->GetSize());
 }
 
 void GridInteractorStyle::OnRightButtonDown()
@@ -75,8 +74,8 @@ void GridInteractorStyle::OnLeftButtonUp()
 void GridInteractorStyle::OnMouseMove()
 {
 	vtkInteractorStyleTrackballCamera::OnMouseMove();
-	plane->HitTestingAtBorder(camera);
-	axes->RebuildAxes(camera, Interactor->GetRenderWindow()->GetSize());
+	plane->HitTestingAtBorder(renderer->GetActiveCamera());
+	axes->RebuildAxes(renderer->GetActiveCamera(), Interactor->GetRenderWindow()->GetSize());
 
 	double coordinate[3];
 
@@ -162,20 +161,20 @@ void GridInteractorStyle::followToLine(double* mousePosition)
 	double x = mousePosition[0];
 	double y = mousePosition[1];
 
-	double xCam = camera->GetPosition()[0];
-	double yCam = camera->GetPosition()[1];
-	double zCam = camera->GetPosition()[2];
+	double xCam = renderer->GetActiveCamera()->GetPosition()[0];
+	double yCam = renderer->GetActiveCamera()->GetPosition()[1];
+	double zCam = renderer->GetActiveCamera()->GetPosition()[2];
 
 	if (abs(xmin - x) < 2.0 && x > xmin) {
-		camera->SetPosition(xCam - 0.1, yCam, zCam);
+		renderer->GetActiveCamera()->SetPosition(xCam - 0.1, yCam, zCam);
 	}
 	else if (abs(xmax - x) < 2.0 && x < xmax) {
-		camera->SetPosition(xCam + 0.1, yCam, zCam);
+		renderer->GetActiveCamera()->SetPosition(xCam + 0.1, yCam, zCam);
 	}
 	else if (abs(ymin - y) < 2.0 && y > ymin) {
-		camera->SetPosition(xCam, yCam - 0.1, zCam);
+		renderer->GetActiveCamera()->SetPosition(xCam, yCam - 0.1, zCam);
 	}
 	else if (abs(ymax - y) < 2.0 && y < ymax) {
-		camera->SetPosition(xCam, yCam + 0.1, zCam);
+		renderer->GetActiveCamera()->SetPosition(xCam, yCam + 0.1, zCam);
 	}
 }
