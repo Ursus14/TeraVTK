@@ -6,6 +6,7 @@
 #include "Point.h"
 #include "Lines.h"
 #include "BrokenLine.h"
+#include <array>
 
 
 class VTKINTERACTIONSTYLE_EXPORT GridInteractorStyle: public InteractorDoubleClick
@@ -22,6 +23,8 @@ public:
 						vtkSmartPointer<vtkRenderer> _renderer);
 
 	double* GetCurrentMousePosition();
+	double* GetViewportBorder();
+	void followToLine(double* mousePosition);
 
 private:
 	virtual void OnMouseWheelBackward();
@@ -36,7 +39,9 @@ private:
 
 	//---------------------------------------
 	bool isAddLine = false;
-	double prevPosition[2]{ 0.0, 0.0 };
+	double dx = 0;
+	double dy = 0;
+	double prevPosition[3]= { 0.0, 0.0, 0.0 };
 	std::vector<Line*> lines_;
 	Line* line_ = new Line(vtkSmartPointer<vtkActor>::New());
 	Lines* lines = new Lines();

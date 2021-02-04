@@ -41,13 +41,14 @@ int main(int, char* [])
 	vtkSmartPointer<vtkCamera> camera = vtkSmartPointer<vtkCamera>::New();
 	vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
 	
-	double cell[2] = { 0.1,0.1 };
-	double parallelScale = 5;
-	int sizewin[2] = { 700,400 };
+	double cell[2] = { 1,1 };
+	double parallelScale = 6;
+	int sizewin[2] = { 600,600 };
 
 	PlaneGrid* plane = new PlaneGrid(cell,sizewin,parallelScale);
 	MainAxes* axes = new MainAxes(sizewin,parallelScale);
-	Point* marker = new Point(0.05*cell[0]);
+	Point* marker = new Point(0.03*cell[0]);
+	marker->VisibilityOff();
 	std::vector<Point> drawPoints;
 	
 	renderer->AddActor(plane->GetActor(0));

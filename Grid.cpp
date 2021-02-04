@@ -2,29 +2,29 @@
 
 Grid::Grid()
 {
-	position = new double[3]{ 0.0, 0.0, 0.0 };
-	size = new double[2]{ 10.0, 10.0 };
-	cell = new double[2]{ 1.0, 1.0 };
+	position = { 0.0, 0.0, 0.0 };
+	size = { 10.0, 10.0 };
+	cell = { 1.0, 1.0 };
 	actor = vtkSmartPointer<vtkActor>::New();
 	BuildActor();
-	actor->SetPosition(position);
+	actor->SetPosition(position[0], position[1], position[2]);
 }
 
 Grid::Grid(double* _position, double* _size, double* _cell)
 {
-	position = new double[3]{ _position[0], _position[1], 0.0 };
-	size = new double[2]{ _size[0], _size[1] };
-	cell = new double[2]{ _cell[0], _cell[1] };
+	position = { _position[0], _position[1], 0.0 };
+	size = { _size[0], _size[1] };
+	cell = { _cell[0], _cell[1] };
 	actor = vtkSmartPointer<vtkActor>::New();
 	BuildActor();
-	actor->SetPosition(position);
+	actor->SetPosition(position[0], position[1], position[2]);
 }
 
 void Grid::SetPosition(double* newpos)
 {
 	position[0] = newpos[0];
 	position[1] = newpos[1];
-	actor->SetPosition(position);
+	actor->SetPosition(position[0], position[1], position[2]);
 }
 
 void Grid::SetPosition(double newX, double newY, double newZ)
@@ -32,7 +32,7 @@ void Grid::SetPosition(double newX, double newY, double newZ)
 	position[0] = newX;
 	position[1] = newY;
 	position[2] = newZ;
-	actor->SetPosition(position);
+	actor->SetPosition(position[0], position[1], position[2]);
 }
 
 void Grid::SetSize(double* newsize, bool rebuild)

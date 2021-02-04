@@ -34,6 +34,7 @@
 
 #include <chrono>
 #include <ctime>
+#include <array>
 #include "vtkCallbackCommand.h"
 #include "vtkCamera.h"
 #include "vtkMath.h"
@@ -53,7 +54,7 @@ public:
 
 private:
 	double doubleClickTimeLimit = 0.5;
-	int* PreviousPosition = new int[2]{ 0,0 };
+	std::array<int, 2> PreviousPosition = { 0,0 };
 	int ResetPixelDistance = 5;
 	unsigned int NumberOfClicks = 0;
 	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();

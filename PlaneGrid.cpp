@@ -13,7 +13,7 @@ PlaneGrid::PlaneGrid()
 	pos[0] = -6.0;
 	pGrids[3] =  Grid(pos, size, cell);
 
-	borderline = new double[4]{ pGrids[0].GetPosition()[0],pGrids[1].GetPosition()[1] ,pGrids[2].GetPosition()[0] , pGrids[3].GetPosition()[1]};
+	borderline = { pGrids[0].GetPosition()[0],pGrids[1].GetPosition()[1] ,pGrids[2].GetPosition()[0] , pGrids[3].GetPosition()[1]};
 }
 
 PlaneGrid::PlaneGrid(double* cell, int* sizewin, double parallelScale)
@@ -45,7 +45,7 @@ PlaneGrid::PlaneGrid(double* cell, int* sizewin, double parallelScale)
 	pos[0] =  - size[0] / 2.0;
 	pGrids[3] = Grid(pos, size, cell);
 
-	borderline = new double[4]{ pGrids[0].GetPosition()[0],pGrids[1].GetPosition()[1] ,pGrids[2].GetPosition()[0] , pGrids[3].GetPosition()[1] };
+	borderline = { pGrids[0].GetPosition()[0],pGrids[1].GetPosition()[1] ,pGrids[2].GetPosition()[0] , pGrids[3].GetPosition()[1] };
 }
 
 
