@@ -10,6 +10,7 @@ class PlaneGrid
 {
 public:
 	PlaneGrid();
+	PlaneGrid(double* cell, int* sizewin, double parallelScale);
 	void RecountBorderline(); 
 	void RebuildPlane(vtkCamera* camera, int* sizewin);
 	void HitTestingAtBorder(vtkCamera* camera);
@@ -20,6 +21,7 @@ public:
 
 private:
 	void FlippingGrids(int borderNumber);
+	void build(double* cell, int* sizewin, double parallelScale);
 
 	Grid pGrids[4];					// four elements of the coordinate plane
 	double* borderline;				// boundaries where the camera can be located

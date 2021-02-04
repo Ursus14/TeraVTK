@@ -80,21 +80,21 @@ void Grid::BuildActor()
 	vtkSmartPointer<vtkCellArray> lines = vtkCellArray::New();
 
 	int num = 0;
-	for (double i = -size[1]/2.0; i <= size[1]/2.0; i+=cell[1]) {
-		points->InsertNextPoint(-size[0]/2, i , 0);
-		points->InsertNextPoint(size[0]/2, i , 0);
+	for (double i = -size[1] / 2.0; i <= size[1] / 2.0; i += cell[1]) {
+		points->InsertNextPoint(-size[0] / 2, i, 0);
+		points->InsertNextPoint(size[0] / 2, i, 0);
 
-		vtkIdType cell[] = { 2 * num, 2 * num + 1 };
-		lines->InsertNextCell(2, cell);
+		vtkIdType tcell[] = { 2 * num, 2 * num + 1 };
+		lines->InsertNextCell(2, tcell);
 		num++;
 	}
 
-	for (double i = -size[0]/2.0; i <= size[0]/2.0; i+=cell[0]) {
-		points->InsertNextPoint(i, -size[1]/2, 0);
-		points->InsertNextPoint(i , size[1]/2, 0);
+	for (double i = -size[0] / 2.0; i <= size[0] / 2.0; i += cell[0]) {
+		points->InsertNextPoint(i, -size[1] / 2, 0);
+		points->InsertNextPoint(i, size[1] / 2, 0);
 
-		vtkIdType cell[] = { 2 * num, 2 * num + 1 };
-		lines->InsertNextCell(2, cell);
+		vtkIdType tcell[] = { 2 * num, 2 * num + 1 };
+		lines->InsertNextCell(2, tcell);
 		num++;
 	}
 

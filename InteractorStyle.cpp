@@ -40,7 +40,7 @@ void InteractorStyle::OnLeftButtonDown() {
 	prevPosition[1] = GetCurrentMousePosition()[1];
 	line_->SetBeginPosition(prevPosition);
 	isAddLine = true;
-	Point* point = new Point(GetCurrentMousePosition());
+	Point* point = new Point(GetCurrentMousePosition(), 0.05 * plane->GetCell()[0]);
 	renderer->AddActor(point->GetActor());
 	line_->build(GetCurrentMousePosition(), renderer);
 	Interactor->GetRenderWindow()->Render();
@@ -53,12 +53,12 @@ void InteractorStyle::OnLeftButtonUp() {
 	}
 	line_->SetBeginPosition(prevPosition);
 	line_->build(world, renderer);
-	Point* point = new Point(world);
+	Point* point = new Point(world, 0.05 * plane->GetCell()[0]);
 	renderer->AddActor(point->GetActor());
 
 	for (auto line : lines_) {
 		if (lines->intersect(line, line_)) {
-			Point* point_ = new Point(lines->getIntersectionPoint(line, line_));
+			Point* point_ = new Point(lines->getIntersectionPoint(line, line_), 0.05 * plane->GetCell()[0]);
 			renderer->AddActor(point_->GetActor());
 		}
 	}
@@ -81,7 +81,7 @@ void InteractorStyle::OnMouseMove() {
 
 	if (isAddLine) {
 		line_->rebuild(coordinate, renderer);
-		followToLine(coordinate);
+		//followToLine(coordinate);
 	}
 	marker->SetPosition(coordinate);
 	marker->VisibilityOn();
@@ -100,7 +100,7 @@ void InteractorStyle::OnLeave() {
 void InteractorStyle::OnLeftDoubleClick() {
 	DoubleClickMouse::OnLeftDoubleClick();
 	double* world = GetCurrentMousePosition();
-	drawPoints.push_back(Point(world));
+	drawPoints.push_back(Point(world, 0.05 * plane->GetCell()[0]));
 	renderer->AddActor(drawPoints[drawPoints.size() - 1].GetActor());
 }
 

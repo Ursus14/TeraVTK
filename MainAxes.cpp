@@ -1,14 +1,30 @@
 #include "MainAxes.h"
 
-MainAxes::MainAxes()
-{
+MainAxes::MainAxes() {
+
+	build(new int[2]{ 1, 1 }, 3.0);
+}
+
+
+MainAxes::MainAxes(int* sizewin, double parallelScale) {
+	build(sizewin, parallelScale);
+}
+
+void MainAxes::build(int* sizewin, double parallelScale) {
 	actor = vtkSmartPointer<vtkActor>::New();
 	vtkSmartPointer<vtkPoints> points = vtkPoints::New();
 	points->Allocate(4);
-	points->InsertNextPoint(0, -12, 0);
-	points->InsertNextPoint(0, 12, 0);
-	points->InsertNextPoint(-12, 0, 0);
-	points->InsertNextPoint(12, 0, 0);
+
+	double* scale = new double[2]{ 4 * parallelScale ,4 * parallelScale };
+	if (sizewin[0] / sizewin[1] > 1)
+		scale[0] *= (sizewin[0] * 1.0) / sizewin[1];
+	else
+		scale[1] *= (sizewin[1] * 1.0) / sizewin[0];
+
+	points->InsertNextPoint(0, -scale[1], 0);
+	points->InsertNextPoint(0, scale[1], 0);
+	points->InsertNextPoint(-scale[0], 0, 0);
+	points->InsertNextPoint(scale[0], 0, 0);
 
 	vtkSmartPointer<vtkPolyData> polydata = vtkPolyData::New();
 	polydata->SetPoints(points);
@@ -24,7 +40,9 @@ MainAxes::MainAxes()
 	mapper->SetInputData(polydata);
 	actor->SetMapper(mapper);
 	actor->GetProperty()->SetColor(0, 0, 0);
+
 }
+
 
 void MainAxes::RebuildAxes(vtkSmartPointer<vtkCamera> camera, int* sizewin)
 {

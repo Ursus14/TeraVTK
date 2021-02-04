@@ -1,24 +1,13 @@
 #include "Point.h"
 
-Point::Point()
-{
-	actor = vtkSmartPointer<vtkActor>::New();
-
-	vtkSmartPointer<vtkRegularPolygonSource> point = vtkSmartPointer<vtkRegularPolygonSource>::New();
-	point->SetNumberOfSides(50);
-	point->SetRadius(0.05);
-	point->SetCenter(0, 0, 0);
-
-
-	vtkSmartPointer<vtkPolyDataMapper> mapper = vtkPolyDataMapper::New();
-	mapper->SetInputConnection(point->GetOutputPort());
-	actor->SetMapper(mapper);
-	actor->GetProperty()->SetColor(0.47, 0.07, 0.07);
-	actor->SetVisibility(1);
+Point::Point() {
+	build(new double[3]{ 0.0, 0.0, 0.0 }, 0.025);
+}
+Point::Point(double radius) {
+	build(new double[3]{ 0.0, 0.0, 0.0 }, radius);
 }
 
-Point::Point(double* _position, double _radius)
-{
+Point::Point(double* _position, double _radius) {
 	build(_position, _radius);
 }
 
@@ -40,6 +29,7 @@ void Point::build(double* _position, double _radius) {
 	radius = _radius;
 	
 }
+
 
 void Point::SetRadius(double _radius)
 {

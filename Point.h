@@ -11,7 +11,8 @@ class Point
 {
 public:
 	Point();
-	Point(double* _position, double _radius = 0.05);
+	Point(double _radius);
+	Point(double* _position, double _radius = 0.025);
 	void SetRadius(double _radius);
 	void SetPosition(double* position);
 	void SetColor(int r, int g, int b); // parameter values from 0 to 255

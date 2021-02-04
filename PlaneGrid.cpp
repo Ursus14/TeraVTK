@@ -1,20 +1,44 @@
 #include "PlaneGrid.h"
 
 PlaneGrid::PlaneGrid() {
-	double* pos = new double[3]{ -6.0, 6.0, 0.0 };
-	double* cell = new double[2]{ 1.0, 1.0 };
-	double* size = new double[2]{ 12.0, 12.0 };
-	pGrids[0] =  Grid(pos, size, cell);
-	pos[0] = 6.0;
-	pGrids[1] =  Grid(pos, size, cell);
-	pos[1] = -6.0;
-	pGrids[2] =  Grid(pos, size, cell);
-	pos[0] = -6.0;
-	pGrids[3] =  Grid(pos, size, cell);
-
-	borderline = new double[4]{ pGrids[0].GetPosition()[0],pGrids[1].GetPosition()[1] ,pGrids[2].GetPosition()[0] , pGrids[3].GetPosition()[1]};
+	build(new double[2]{ 1.0, 1.0 }, new int[2]{ 1,1 }, 3.0);
 }
 
+PlaneGrid::PlaneGrid(double* cell, int* sizewin, double parallelScale) {
+	build(cell, sizewin, parallelScale);
+}
+
+
+void PlaneGrid::build(double* cell, int* sizewin, double parallelScale) {
+	double* size = new double[2]{ 4.0 * parallelScale, 4.0 * parallelScale };
+
+
+	// in case the window is not square
+	if (sizewin[0] / sizewin[1] > 1)
+		size[0] *= (sizewin[0] * 1.0) / sizewin[1];
+	else
+		size[1] *= (sizewin[1] * 1.0) / sizewin[0];
+
+	// checking the conditions for the grid size
+	for (int i = 0; i < 2; i++) {
+		if (fmod(size[i], cell[i]) != 0)
+			size[i] = floor(size[i] / cell[i]) * cell[i] + cell[i];
+
+		if (fmod(size[i] / cell[i], 2.0) != 0)
+			size[i] += cell[i];
+	}
+	double* pos = new double[3]{ -size[0] / 2.0 ,size[1] / 2.0, 0 };
+
+	pGrids[0] = Grid(pos, size, cell);
+	pos[0] = size[0] / 2.0;
+	pGrids[1] = Grid(pos, size, cell);
+	pos[1] = -size[1] / 2.0;
+	pGrids[2] = Grid(pos, size, cell);
+	pos[0] = -size[0] / 2.0;
+	pGrids[3] = Grid(pos, size, cell);
+
+	borderline = new double[4]{ pGrids[0].GetPosition()[0],pGrids[1].GetPosition()[1] ,pGrids[2].GetPosition()[0] , pGrids[3].GetPosition()[1] };
+}
 
 void PlaneGrid::RecountBorderline() {
 	borderline[0] = pGrids[sequence[0]].GetPosition()[0];
