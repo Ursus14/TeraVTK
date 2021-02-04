@@ -23,7 +23,6 @@ public:
 
 	double* GetCurrentMousePosition();
 	double* GetViewportBorder();
-	void followToLine(double* mousePosition);
 
 private:
 	virtual void OnMouseWheelBackward();
@@ -35,6 +34,7 @@ private:
 	virtual void OnMouseMove();
 	virtual void OnLeave();
 	virtual void OnLeftDoubleClick();
+	virtual void Scrolling();
 
 	//---------------------------------------
 	bool isAddLine = false;

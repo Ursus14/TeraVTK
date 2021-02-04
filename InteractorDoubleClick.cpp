@@ -9,8 +9,7 @@ InteractorDoubleClick::InteractorDoubleClick()
 
 void InteractorDoubleClick::OnLeftDoubleClick()
 {
-    FindPokedRenderer(
-        Interactor->GetEventPosition()[0],Interactor->GetEventPosition()[1]);
+    FindPokedRenderer(Interactor->GetEventPosition()[0], Interactor->GetEventPosition()[1]);
     if (CurrentRenderer == nullptr)
     {
         return;
@@ -21,6 +20,19 @@ void InteractorDoubleClick::OnLeftDoubleClick()
 
 void InteractorDoubleClick::OnLeftButtonDown()
 { 
+    FindPokedRenderer(Interactor->GetEventPosition()[0], Interactor->GetEventPosition()[1]);
+    if (CurrentRenderer == nullptr)
+    {
+        return;
+    }
+
+    GrabFocus(EventCallbackCommand);
+
+    SetTimerDuration(1);
+    UseTimersOn();
+    StartTimer();
+
+    //----------------------
     NumberOfClicks++;
 
     if (NumberOfClicks == 1)
@@ -51,6 +63,26 @@ void InteractorDoubleClick::OnLeftButtonDown()
     {
         OnLeftDoubleClick();
         NumberOfClicks = 0;
+        EndTimer();
+    }
+}
+
+void InteractorDoubleClick::OnLeftButtonUp()
+{
+    EndTimer();
+    if (Interactor)
+    {
+        ReleaseFocus();
+    }   
+}
+
+
+void InteractorDoubleClick::OnTimer()
+{
+    if (CurrentRenderer == nullptr)
+    {
         return;
     }
+    
+    Scrolling();
 }

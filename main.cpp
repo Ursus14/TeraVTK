@@ -42,7 +42,7 @@ int main(int, char* [])
 	vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
 	
 	double cell[2] = { 1,1 };
-	double parallelScale = 6;
+	double parallelScale = 4;
 	int sizewin[2] = { 600,600 };
 
 	PlaneGrid* plane = new PlaneGrid(cell,sizewin,parallelScale);

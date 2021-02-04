@@ -50,7 +50,12 @@ public:
 
 	virtual void OnLeftDoubleClick();
 	virtual void OnLeftButtonDown();
-	
+	virtual void OnLeftButtonUp();
+
+
+	virtual void OnTimer();
+	virtual void Scrolling() {};
+
 
 private:
 	double doubleClickTimeLimit = 0.5;

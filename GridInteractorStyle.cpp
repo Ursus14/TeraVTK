@@ -51,6 +51,8 @@ void GridInteractorStyle::OnLeftButtonDown()
 
 void GridInteractorStyle::OnLeftButtonUp()
 {
+	InteractorDoubleClick::OnLeftButtonUp();
+
 	line_->rebuild(GetCurrentMousePosition(), renderer);
 
 	if (line_->GetLength() == 0) {
@@ -85,7 +87,6 @@ void GridInteractorStyle::OnMouseMove()
 
 	if (isAddLine) {
 		line_->rebuild(coordinate, renderer);
-		followToLine(coordinate);
 	}
 	//calculating the new position for the marker
 	int* sizeWin = Interactor->GetRenderWindow()->GetSize();
@@ -110,6 +111,34 @@ void GridInteractorStyle::OnLeftDoubleClick()
 	drawPoints.push_back(Point(GetCurrentMousePosition(),0.025 * plane->GetCell()[0]));
 	drawPoints[drawPoints.size() - 1].SetColor(0,0,0);
 	renderer->AddActor(drawPoints[drawPoints.size()-1].GetActor());
+}
+
+void GridInteractorStyle::Scrolling()
+{
+	if (isAddLine) {
+		int* mousePos = Interactor->GetEventPosition();
+		int* sizeWin = Interactor->GetRenderWindow()->GetSize();
+		int delta = 20;
+		double mult = renderer->GetActiveCamera()->GetParallelScale()/8;
+
+		if (mousePos[0] < delta) {
+			mult = renderer->GetActiveCamera()->GetParallelScale() * abs(atan((mousePos[0] - delta) / 100.0) ) / 12.0;
+			renderer->GetActiveCamera()->SetPosition(renderer->GetActiveCamera()->GetPosition()[0] - mult, renderer->GetActiveCamera()->GetPosition()[1], renderer->GetActiveCamera()->GetPosition()[2]);
+		}
+		if (mousePos[0] > sizeWin[0] - delta) {
+			mult = renderer->GetActiveCamera()->GetParallelScale() * abs(atan((mousePos[0] - (sizeWin[0] - delta)) / 100.0)) / 12.0;
+			renderer->GetActiveCamera()->SetPosition(renderer->GetActiveCamera()->GetPosition()[0] + mult, renderer->GetActiveCamera()->GetPosition()[1], renderer->GetActiveCamera()->GetPosition()[2]);
+		}
+		if (mousePos[1] < delta) {
+			mult = renderer->GetActiveCamera()->GetParallelScale() * abs(atan((mousePos[1] - delta)/100.0)) / 12.0;
+			renderer->GetActiveCamera()->SetPosition(renderer->GetActiveCamera()->GetPosition()[0], renderer->GetActiveCamera()->GetPosition()[1] - mult, renderer->GetActiveCamera()->GetPosition()[2]);
+		}
+		if (mousePos[1] > sizeWin[1] - delta) {
+			mult = renderer->GetActiveCamera()->GetParallelScale() * abs(atan((mousePos[1] - (sizeWin[1] - delta)) / 100.0)) / 12.0;
+			renderer->GetActiveCamera()->SetPosition(renderer->GetActiveCamera()->GetPosition()[0], renderer->GetActiveCamera()->GetPosition()[1] + mult, renderer->GetActiveCamera()->GetPosition()[2]);
+		}
+		OnMouseMove();
+	}
 }
 
 double* GridInteractorStyle::GetCurrentMousePosition() {
@@ -147,34 +176,4 @@ double* GridInteractorStyle::GetViewportBorder()
 	coordinateMin->SetValue(xmin, ymin, 0);
 	double* worldMin = coordinateMin->GetComputedWorldValue(Interactor->GetRenderWindow()->GetRenderers()->GetFirstRenderer());
 	return new double[4]{ worldMin[0], worldMax[0], worldMin[1], worldMax[1] };
-}
-
-void GridInteractorStyle::followToLine(double* mousePosition)
-{
-	double* borders = GetViewportBorder();
-
-	double xmin = borders[0];
-	double xmax = borders[1];
-	double ymin = borders[2];
-	double ymax = borders[3];
-
-	double x = mousePosition[0];
-	double y = mousePosition[1];
-
-	double xCam = renderer->GetActiveCamera()->GetPosition()[0];
-	double yCam = renderer->GetActiveCamera()->GetPosition()[1];
-	double zCam = renderer->GetActiveCamera()->GetPosition()[2];
-
-	if (abs(xmin - x) < 2.0 && x > xmin) {
-		renderer->GetActiveCamera()->SetPosition(xCam - 0.1, yCam, zCam);
-	}
-	else if (abs(xmax - x) < 2.0 && x < xmax) {
-		renderer->GetActiveCamera()->SetPosition(xCam + 0.1, yCam, zCam);
-	}
-	else if (abs(ymin - y) < 2.0 && y > ymin) {
-		renderer->GetActiveCamera()->SetPosition(xCam, yCam - 0.1, zCam);
-	}
-	else if (abs(ymax - y) < 2.0 && y < ymax) {
-		renderer->GetActiveCamera()->SetPosition(xCam, yCam + 0.1, zCam);
-	}
 }
