@@ -1,5 +1,4 @@
-#pragma once
-#include "DoubleClickMouse.h"
+#include "DoubleClick.h"
 #include "Grid.h"
 #include "PlaneGrid.h"
 #include "MainAxes.h"
@@ -7,21 +6,20 @@
 #include "Lines.h"
 #include "BrokenLine.h"
 
-class VTKINTERACTIONSTYLE_EXPORT InteractorStyle: public DoubleClickMouse
+class VTKINTERACTIONSTYLE_EXPORT InteractorStyle: public DoubleClick
 {
 public:
 	static InteractorStyle* New();
-	vtkTypeMacro(InteractorStyle, DoubleClickMouse);
+	vtkTypeMacro(InteractorStyle, DoubleClick);
 	InteractorStyle();
 	InteractorStyle(PlaneGrid* _plane, 
-						MainAxes* _axes,
-						Point* _marker, 
-						std::vector<Point> _drawPoints, 
-						vtkSmartPointer<vtkRenderer> _renderer);
+					MainAxes* _axes,
+					Point* _marker, 
+					std::vector<Point> _drawPoints, 
+					vtkSmartPointer<vtkRenderer> _renderer);
 
 	double* GetCurrentMousePosition();
 	double* GetViewportBorder();
-	void followToLine(double* mousePosition);
 
 private:
 	virtual void OnMouseWheelBackward();
@@ -33,13 +31,13 @@ private:
 	virtual void OnMouseMove();
 	virtual void OnLeave();
 	virtual void OnLeftDoubleClick();
-	//virtual void OnTimer();
+	virtual void Scrolling();
 
 	//---------------------------------------
 	bool isAddLine = false;
 	double dx = 0;
 	double dy = 0;
-	double prevPosition[2]{ 0.0, 0.0 };
+	double prevPosition[3] = { 0.0, 0.0, 0.0 };
 	std::vector<Line*> lines_;
 	Line* line_ = new Line(vtkSmartPointer<vtkActor>::New());
 	Lines* lines = new Lines();
@@ -49,7 +47,6 @@ private:
 	MainAxes* axes;
 	Point* marker;
 	std::vector<Point> drawPoints;
-	vtkSmartPointer<vtkCamera> camera;
 	vtkSmartPointer<vtkRenderer> renderer;
 };
 

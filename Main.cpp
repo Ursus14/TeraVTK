@@ -36,13 +36,12 @@ static void CameraModifiedCallback(vtkObject* caller,
 	camera->SetFocalPoint(camera->GetPosition()[0], camera->GetPosition()[1], 0);
 }
 
-int main(int, char* [])
-{
+int main(int, char* []) {
 	vtkSmartPointer<vtkCamera> camera = vtkSmartPointer<vtkCamera>::New();
 	vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
 	
 	double cell[2] = { 0.1, 0.1 };
-	double parallelScale = 5;
+	double parallelScale = 4;
 	int sizewin[2] = { 700, 400 };
 
 

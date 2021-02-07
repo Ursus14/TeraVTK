@@ -1,89 +1,86 @@
 #include "InteractorStyle.h"
-
 vtkStandardNewMacro(InteractorStyle);
 
-InteractorStyle::InteractorStyle()
-{
+InteractorStyle::InteractorStyle(){
 }
 
-InteractorStyle::InteractorStyle(PlaneGrid* _plane, MainAxes* _axes, Point* _marker, std::vector<Point> _drawPoints, vtkSmartPointer<vtkRenderer> _renderer) {
+InteractorStyle::InteractorStyle(PlaneGrid* _plane, MainAxes* _axes, Point* _marker, std::vector<Point> _drawPoints, vtkSmartPointer<vtkRenderer> _renderer){
 	plane = _plane;
-	camera = _renderer->GetActiveCamera();
 	renderer = _renderer;
 	axes = _axes;
 	marker = _marker;
 	drawPoints = _drawPoints;
 }
 
-void InteractorStyle::OnMouseWheelBackward() {
+void InteractorStyle::OnMouseWheelBackward(){
 	vtkInteractorStyleTrackballCamera::OnMouseWheelBackward();
-	plane->RebuildPlane(camera, Interactor->GetRenderWindow()->GetSize());
-	axes->RebuildAxes(camera, Interactor->GetRenderWindow()->GetSize());
+	plane->RebuildPlane(renderer->GetActiveCamera(), Interactor->GetRenderWindow()->GetSize());
+	axes->RebuildAxes(renderer->GetActiveCamera(), Interactor->GetRenderWindow()->GetSize());
 }
 
-void InteractorStyle::OnMouseWheelForward() {
+void InteractorStyle::OnMouseWheelForward(){
 	vtkInteractorStyleTrackballCamera::OnMouseWheelForward();
-	plane->RebuildPlane(camera, Interactor->GetRenderWindow()->GetSize());
-	axes->RebuildAxes(camera, Interactor->GetRenderWindow()->GetSize());
+	plane->RebuildPlane(renderer->GetActiveCamera(), Interactor->GetRenderWindow()->GetSize());
+	axes->RebuildAxes(renderer->GetActiveCamera(), Interactor->GetRenderWindow()->GetSize());
 }
 
-void InteractorStyle::OnRightButtonDown() {
+void InteractorStyle::OnRightButtonDown(){
 	vtkInteractorStyleTrackballCamera::OnMiddleButtonDown();
 }
 
-void InteractorStyle::OnRightButtonUp() {
+void InteractorStyle::OnRightButtonUp(){
 	vtkInteractorStyleTrackballCamera::OnMiddleButtonUp();
 }
 void InteractorStyle::OnLeftButtonDown() {
-	DoubleClickMouse::OnLeftButtonDown();
+	DoubleClick::OnLeftButtonDown();
 	prevPosition[0] = GetCurrentMousePosition()[0];
 	prevPosition[1] = GetCurrentMousePosition()[1];
 	line_->SetBeginPosition(prevPosition);
+	line_->SetEndPosition(prevPosition);
 	isAddLine = true;
-	Point* point = new Point(GetCurrentMousePosition(), 0.05 * plane->GetCell()[0]);
-	renderer->AddActor(point->GetActor());
-	line_->build(GetCurrentMousePosition(), renderer);
+	line_->build(prevPosition, renderer, 0.05 * plane->GetCell()[0]);
 	Interactor->GetRenderWindow()->Render();
 }
 
-void InteractorStyle::OnLeftButtonUp() {
-	double* world = GetCurrentMousePosition();
-	if (prevPosition[0] == world[0] && prevPosition[1] == world[1]) {
+void InteractorStyle::OnLeftButtonUp(){
+	DoubleClick::OnLeftButtonUp();
 
+	line_->rebuild(GetCurrentMousePosition(), renderer);
+
+	if (line_->GetLengthSquare() == 0) {
+		line_->Remove(renderer);
 	}
-	line_->SetBeginPosition(prevPosition);
-	line_->build(world, renderer);
-	Point* point = new Point(world, 0.05 * plane->GetCell()[0]);
-	renderer->AddActor(point->GetActor());
-
-	for (auto line : lines_) {
-		if (lines->intersect(line, line_)) {
-			Point* point_ = new Point(lines->getIntersectionPoint(line, line_), 0.05 * plane->GetCell()[0]);
-			renderer->AddActor(point_->GetActor());
+	else {
+		for (auto line : lines_) {
+			if (lines->intersect(line, line_)) {
+				Point* point_ = new Point(lines->getIntersectionPoint(line, line_), 0.05 * plane->GetCell()[0]);
+				renderer->AddActor(point_->GetActor());
+			}
 		}
+		lines_.push_back(line_);
+
+		Interactor->GetRenderWindow()->Render();
+		line_ = new Line(vtkSmartPointer<vtkActor>::New());
 	}
-	lines_.push_back(line_);
-
-	Interactor->GetRenderWindow()->Render();
-	line_ = new Line(vtkSmartPointer<vtkActor>::New());
 	isAddLine = false;
-}
-
-void InteractorStyle::OnMouseMove() {
+} 
+void InteractorStyle::OnMouseMove(){
 	vtkInteractorStyleTrackballCamera::OnMouseMove();
-	plane->HitTestingAtBorder(camera);
-	axes->RebuildAxes(camera, Interactor->GetRenderWindow()->GetSize());
+	plane->BorderHitCheck(renderer->GetActiveCamera());
+	axes->RebuildAxes(renderer->GetActiveCamera(), Interactor->GetRenderWindow()->GetSize());
 
-	double coordinate[2];
+	double coordinate[3];
 
 	coordinate[0] = GetCurrentMousePosition()[0];
 	coordinate[1] = GetCurrentMousePosition()[1];
+	coordinate[2] = 0.0;
 
 	if (isAddLine) {
 		line_->rebuild(coordinate, renderer);
-		//followToLine(coordinate);
 	}
-	marker->SetPosition(coordinate);
+	//calculating the new position for the marker
+	int* sizeWin = Interactor->GetRenderWindow()->GetSize();
+	marker->SetPosition(GetCurrentMousePosition());
 	marker->VisibilityOn();
 	renderer->RemoveActor(marker->GetActor());
 	renderer->AddActor(marker->GetActor());
@@ -91,17 +88,44 @@ void InteractorStyle::OnMouseMove() {
 
 }
 
-void InteractorStyle::OnLeave() {
+void InteractorStyle::OnLeave(){
 	vtkInteractorStyleTrackballCamera::OnLeave();
 	marker->VisibilityOff();
 	Interactor->GetRenderWindow()->Render();
 }
 
-void InteractorStyle::OnLeftDoubleClick() {
-	DoubleClickMouse::OnLeftDoubleClick();
-	double* world = GetCurrentMousePosition();
-	drawPoints.push_back(Point(world, 0.05 * plane->GetCell()[0]));
+void InteractorStyle::OnLeftDoubleClick(){
+	DoubleClick::OnLeftDoubleClick();
+	drawPoints.push_back(Point(GetCurrentMousePosition(), 0.05 * plane->GetCell()[0]));
+	drawPoints[drawPoints.size() - 1].SetColor(0, 0, 0);
 	renderer->AddActor(drawPoints[drawPoints.size() - 1].GetActor());
+}
+
+void InteractorStyle::Scrolling(){
+	if (isAddLine) {
+		int* mousePos = Interactor->GetEventPosition();
+		int* sizeWin = Interactor->GetRenderWindow()->GetSize();
+		int delta = 20;
+		double mult = renderer->GetActiveCamera()->GetParallelScale() / 8;
+
+		if (mousePos[0] < delta) {
+			mult = renderer->GetActiveCamera()->GetParallelScale() * abs(atan((mousePos[0] - delta) / 100.0)) / 12.0;
+			renderer->GetActiveCamera()->SetPosition(renderer->GetActiveCamera()->GetPosition()[0] - mult, renderer->GetActiveCamera()->GetPosition()[1], renderer->GetActiveCamera()->GetPosition()[2]);
+		}
+		if (mousePos[0] > sizeWin[0] - delta) {
+			mult = renderer->GetActiveCamera()->GetParallelScale() * abs(atan((mousePos[0] - (sizeWin[0] - delta)) / 100.0)) / 12.0;
+			renderer->GetActiveCamera()->SetPosition(renderer->GetActiveCamera()->GetPosition()[0] + mult, renderer->GetActiveCamera()->GetPosition()[1], renderer->GetActiveCamera()->GetPosition()[2]);
+		}
+		if (mousePos[1] < delta) {
+			mult = renderer->GetActiveCamera()->GetParallelScale() * abs(atan((mousePos[1] - delta) / 100.0)) / 12.0;
+			renderer->GetActiveCamera()->SetPosition(renderer->GetActiveCamera()->GetPosition()[0], renderer->GetActiveCamera()->GetPosition()[1] - mult, renderer->GetActiveCamera()->GetPosition()[2]);
+		}
+		if (mousePos[1] > sizeWin[1] - delta) {
+			mult = renderer->GetActiveCamera()->GetParallelScale() * abs(atan((mousePos[1] - (sizeWin[1] - delta)) / 100.0)) / 12.0;
+			renderer->GetActiveCamera()->SetPosition(renderer->GetActiveCamera()->GetPosition()[0], renderer->GetActiveCamera()->GetPosition()[1] + mult, renderer->GetActiveCamera()->GetPosition()[2]);
+		}
+		OnMouseMove();
+	}
 }
 
 double* InteractorStyle::GetCurrentMousePosition() {
@@ -118,7 +142,7 @@ double* InteractorStyle::GetCurrentMousePosition() {
 	return world;
 }
 
-double* InteractorStyle::GetViewportBorder() {
+double* InteractorStyle::GetViewportBorder(){
 	int xmax = Interactor->GetRenderWindow()->GetSize()[0];
 	int ymax = Interactor->GetRenderWindow()->GetSize()[1];
 
@@ -138,34 +162,4 @@ double* InteractorStyle::GetViewportBorder() {
 	coordinateMin->SetValue(xmin, ymin, 0);
 	double* worldMin = coordinateMin->GetComputedWorldValue(Interactor->GetRenderWindow()->GetRenderers()->GetFirstRenderer());
 	return new double[4]{ worldMin[0], worldMax[0], worldMin[1], worldMax[1] };
-}
-
-void InteractorStyle::followToLine(double* mousePosition) {
-	double* borders = GetViewportBorder();
-
-	double xmin = borders[0];
-	double xmax = borders[1];
-	double ymin = borders[2];
-	double ymax = borders[3];
-
-	double x = mousePosition[0];
-	double y = mousePosition[1];
-
-	double xCam = camera->GetPosition()[0];
-	double yCam = camera->GetPosition()[1];
-	double zCam = camera->GetPosition()[2];
-
-	if (abs(xmin - x) <  2.0 && x >  xmin) {
-		camera->SetPosition(xCam - 0.1, yCam, zCam);
-	}
-	else if (abs(xmax - x) < 2.0 && x < xmax) {
-		camera->SetPosition(xCam + 0.1, yCam, zCam);
-	}
-	else if (abs(ymin - y) < 2.0 && y > ymin) {
-		camera->SetPosition(xCam, yCam - 0.1, zCam);
-	}
-	else if (abs(ymax - y) < 2.0 && y < ymax) {
-		camera->SetPosition(xCam, yCam + 0.1, zCam);
-	}
-
 }

@@ -40,14 +40,19 @@
 #include "vtkObjectFactory.h"
 #include "vtkRenderWindowInteractor.h"
 
-class VTKINTERACTIONSTYLE_EXPORT DoubleClickMouse : public vtkInteractorStyleTrackballCamera {
+class VTKINTERACTIONSTYLE_EXPORT DoubleClick : public vtkInteractorStyleTrackballCamera {
 public:
-	static DoubleClickMouse* New();
-	vtkTypeMacro(DoubleClickMouse, vtkInteractorStyleTrackballCamera);
-	DoubleClickMouse();
+	static DoubleClick* New();
+	vtkTypeMacro(DoubleClick, vtkInteractorStyleTrackballCamera);
+	DoubleClick();
 
 	virtual void OnLeftDoubleClick();
 	virtual void OnLeftButtonDown();
+	virtual void OnLeftButtonUp();
+
+
+	virtual void OnTimer();
+	virtual void Scrolling() {};
 	
 
 private:

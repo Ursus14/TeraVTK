@@ -4,6 +4,7 @@
 #include <vtkLineSource.h>
 #include <vtkProperty.h>
 
+#include "Point.h"
 
 class Line
 {
@@ -17,12 +18,16 @@ public:
 	void SetBeginPosition(double* coordinate);
 	double* GetBeginPosition();
 
-	void build(double* coordinateE, vtkSmartPointer<vtkRenderer> renderer);
+	double GetLengthSquare();
+
+	void build(double* coordinateE, vtkSmartPointer<vtkRenderer> renderer, double radius);
 	void rebuild(double* coordinateE, vtkSmartPointer<vtkRenderer> renderer);
+	void Remove(vtkSmartPointer<vtkRenderer> renderer);
 
 private:
-	double beginPosition[2];
-	double endPosition[2];
+	double beginPosition[3];
+	double endPosition[3];
+	Point points[2];
 	vtkSmartPointer<vtkActor> lineActor_;
 };
 

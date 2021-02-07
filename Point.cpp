@@ -1,7 +1,7 @@
 #include "Point.h"
 
 Point::Point() {
-	build(new double[3]{ 0.0, 0.0, 0.0 }, 0.025);
+	build(new double[3]{ 0.0, 0.0, 0.0 }, 0.05);
 }
 Point::Point(double radius) {
 	build(new double[3]{ 0.0, 0.0, 0.0 }, radius);

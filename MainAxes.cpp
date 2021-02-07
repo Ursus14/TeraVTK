@@ -44,8 +44,7 @@ void MainAxes::build(int* sizewin, double parallelScale) {
 }
 
 
-void MainAxes::RebuildAxes(vtkSmartPointer<vtkCamera> camera, int* sizewin)
-{
+void MainAxes::RebuildAxes(vtkSmartPointer<vtkCamera> camera, int* sizewin) {
 
 	auto scaleX = (abs(camera->GetPosition()[0]) + 3.0 * camera->GetParallelScale()) / 12.0;
 	auto scaleY = (abs(camera->GetPosition()[1]) + 3.0 * camera->GetParallelScale()) / 12.0;
@@ -59,7 +58,6 @@ void MainAxes::RebuildAxes(vtkSmartPointer<vtkCamera> camera, int* sizewin)
 	actor->SetScale(scale);
 }
 
-vtkSmartPointer<vtkActor> MainAxes::GetActor()
-{
+vtkSmartPointer<vtkActor> MainAxes::GetActor() {
 	return actor;
 }

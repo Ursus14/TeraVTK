@@ -23,6 +23,7 @@ public:
 	void BuildActor(); 
 
 private:
+	void build(double* _position, double* _size, double* _cell);
 	vtkSmartPointer<vtkActor> actor;
 	double* position;	// coordinates in space
 	double* size;		// the sizes of the rectangle grid

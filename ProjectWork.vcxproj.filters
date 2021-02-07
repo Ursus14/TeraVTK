@@ -42,7 +42,7 @@
     <ClCompile Include="InteractorStyle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DoubleClickMouse.cpp">
+    <ClCompile Include="DoubleClick.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -71,7 +71,7 @@
     <ClInclude Include="InteractorStyle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DoubleClickMouse.h">
+    <ClInclude Include="DoubleClick.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

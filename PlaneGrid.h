@@ -13,7 +13,7 @@ public:
 	PlaneGrid(double* cell, int* sizewin, double parallelScale);
 	void RecountBorderline(); 
 	void RebuildPlane(vtkCamera* camera, int* sizewin);
-	void HitTestingAtBorder(vtkCamera* camera);
+	void BorderHitCheck(vtkCamera* camera);
 	void SetCell(double cellX, double cellY);
 	double* GetCell();
 	
@@ -24,7 +24,7 @@ private:
 	void build(double* cell, int* sizewin, double parallelScale);
 
 	Grid pGrids[4];					// four elements of the coordinate plane
-	double* borderline;				// boundaries where the camera can be located
+	double borderline[4];				// boundaries where the camera can be located
 	int sequence[4] = { 0, 1, 2, 3 };	// to indicate the position of each grid
 };
 

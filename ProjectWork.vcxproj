@@ -22,7 +22,7 @@
     <ClCompile Include="BrokenLine.cpp" />
     <ClCompile Include="Grid.cpp" />
     <ClCompile Include="InteractorStyle.cpp" />
-    <ClCompile Include="DoubleClickMouse.cpp" />
+    <ClCompile Include="DoubleClick.cpp" />
     <ClCompile Include="Line.cpp" />
     <ClCompile Include="Lines.cpp" />
     <ClCompile Include="main.cpp" />
@@ -34,7 +34,7 @@
     <ClInclude Include="BrokenLine.h" />
     <ClInclude Include="Grid.h" />
     <ClInclude Include="InteractorStyle.h" />
-    <ClInclude Include="DoubleClickMouse.h" />
+    <ClInclude Include="DoubleClick.h" />
     <ClInclude Include="Line.h" />
     <ClInclude Include="Lines.h" />
     <ClInclude Include="MainAxes.h" />
