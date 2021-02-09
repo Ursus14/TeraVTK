@@ -41,9 +41,12 @@ int main(int, char* [])
 	vtkSmartPointer<vtkCamera> camera = vtkSmartPointer<vtkCamera>::New();
 	vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
 	
+<<<<<<< HEAD
 	double cell[2] = { 1,1 };
 	double parallelScale = 4;
 	int sizewin[2] = { 600,600 };
+
+>>>>>>> Ursus14
 
 	PlaneGrid* plane = new PlaneGrid(cell,sizewin,parallelScale);
 	MainAxes* axes = new MainAxes(sizewin,parallelScale);
