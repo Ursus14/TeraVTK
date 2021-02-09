@@ -1,5 +1,5 @@
 #pragma once
-#include "InteractorDoubleClick.h"
+#include "UserEvents.h"
 #include "Grid.h"
 #include "PlaneGrid.h"
 #include "MainAxes.h"
@@ -9,13 +9,13 @@
 #include <array>
 
 
-class VTKINTERACTIONSTYLE_EXPORT GridInteractorStyle: public InteractorDoubleClick
+class VTKINTERACTIONSTYLE_EXPORT InteractorStyle: public UserEvents
 {
 public:
-	static GridInteractorStyle* New();
-	vtkTypeMacro(GridInteractorStyle, InteractorDoubleClick);
-	GridInteractorStyle();
-	GridInteractorStyle(PlaneGrid* _plane, 
+	static InteractorStyle* New();
+	vtkTypeMacro(InteractorStyle, UserEvents);
+	InteractorStyle();
+	InteractorStyle(PlaneGrid* _plane, 
 						MainAxes* _axes,
 						Point* _marker, 
 						std::vector<Point> _drawPoints, 

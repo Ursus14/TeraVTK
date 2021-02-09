@@ -1,11 +1,11 @@
-#include "GridInteractorStyle.h"
-vtkStandardNewMacro(GridInteractorStyle);
+#include "InteractorStyle.h"
+vtkStandardNewMacro(InteractorStyle);
 
-GridInteractorStyle::GridInteractorStyle()
+InteractorStyle::InteractorStyle()
 {
 }
 
-GridInteractorStyle::GridInteractorStyle(PlaneGrid* _plane, MainAxes* _axes, Point* _marker, std::vector<Point> _drawPoints, vtkSmartPointer<vtkRenderer> _renderer)
+InteractorStyle::InteractorStyle(PlaneGrid* _plane, MainAxes* _axes, Point* _marker, std::vector<Point> _drawPoints, vtkSmartPointer<vtkRenderer> _renderer)
 {
 	plane = _plane;
 	renderer = _renderer;
@@ -14,32 +14,32 @@ GridInteractorStyle::GridInteractorStyle(PlaneGrid* _plane, MainAxes* _axes, Poi
 	drawPoints = _drawPoints;
 }
 
-void GridInteractorStyle::OnMouseWheelBackward()
+void InteractorStyle::OnMouseWheelBackward()
 {
 	vtkInteractorStyleTrackballCamera::OnMouseWheelBackward();
 	plane->RebuildPlane(renderer->GetActiveCamera(), Interactor->GetRenderWindow()->GetSize());
 	axes->RebuildAxes(renderer->GetActiveCamera(), Interactor->GetRenderWindow()->GetSize());
 }
 
-void GridInteractorStyle::OnMouseWheelForward()
+void InteractorStyle::OnMouseWheelForward()
 {
 	vtkInteractorStyleTrackballCamera::OnMouseWheelForward();
 	plane->RebuildPlane(renderer->GetActiveCamera(), Interactor->GetRenderWindow()->GetSize());
 	axes->RebuildAxes(renderer->GetActiveCamera(), Interactor->GetRenderWindow()->GetSize());
 }
 
-void GridInteractorStyle::OnRightButtonDown()
+void InteractorStyle::OnRightButtonDown()
 {
 	vtkInteractorStyleTrackballCamera::OnMiddleButtonDown();
 }
 
-void GridInteractorStyle::OnRightButtonUp()
+void InteractorStyle::OnRightButtonUp()
 {
 	vtkInteractorStyleTrackballCamera::OnMiddleButtonUp();
 }
-void GridInteractorStyle::OnLeftButtonDown()
+void InteractorStyle::OnLeftButtonDown()
 {
-	InteractorDoubleClick::OnLeftButtonDown();
+	UserEvents::OnLeftButtonDown();
 	prevPosition[0] = GetCurrentMousePosition()[0];
 	prevPosition[1] = GetCurrentMousePosition()[1];
 	line_->SetBeginPosition(prevPosition);
@@ -49,9 +49,9 @@ void GridInteractorStyle::OnLeftButtonDown()
 	Interactor->GetRenderWindow()->Render();
 }
 
-void GridInteractorStyle::OnLeftButtonUp()
+void InteractorStyle::OnLeftButtonUp()
 {
-	InteractorDoubleClick::OnLeftButtonUp();
+	UserEvents::OnLeftButtonUp();
 
 	line_->rebuild(GetCurrentMousePosition(), renderer);
 
@@ -73,7 +73,7 @@ void GridInteractorStyle::OnLeftButtonUp()
 	isAddLine = false;
 }
 
-void GridInteractorStyle::OnMouseMove()
+void InteractorStyle::OnMouseMove()
 {
 	vtkInteractorStyleTrackballCamera::OnMouseMove();
 	plane->HitTestingAtBorder(renderer->GetActiveCamera());
@@ -98,22 +98,22 @@ void GridInteractorStyle::OnMouseMove()
 
 }
 
-void GridInteractorStyle::OnLeave()
+void InteractorStyle::OnLeave()
 {
 	vtkInteractorStyleTrackballCamera::OnLeave();
 	marker->VisibilityOff();
 	Interactor->GetRenderWindow()->Render();
 }
 
-void GridInteractorStyle::OnLeftDoubleClick()
+void InteractorStyle::OnLeftDoubleClick()
 {
-	InteractorDoubleClick::OnLeftDoubleClick();
+	UserEvents::OnLeftDoubleClick();
 	drawPoints.push_back(Point(GetCurrentMousePosition(),0.025 * plane->GetCell()[0]));
 	drawPoints[drawPoints.size() - 1].SetColor(0,0,0);
 	renderer->AddActor(drawPoints[drawPoints.size()-1].GetActor());
 }
 
-void GridInteractorStyle::Scrolling()
+void InteractorStyle::Scrolling()
 {
 	if (isAddLine) {
 		int* mousePos = Interactor->GetEventPosition();
@@ -141,7 +141,7 @@ void GridInteractorStyle::Scrolling()
 	}
 }
 
-double* GridInteractorStyle::GetCurrentMousePosition() {
+double* InteractorStyle::GetCurrentMousePosition() {
 	double x = Interactor->GetEventPosition()[0];
 	double y = Interactor->GetEventPosition()[1];
 
@@ -155,7 +155,7 @@ double* GridInteractorStyle::GetCurrentMousePosition() {
 	return world;
 }
 
-double* GridInteractorStyle::GetViewportBorder()
+double* InteractorStyle::GetViewportBorder()
 {
 	int xmax = Interactor->GetRenderWindow()->GetSize()[0];
 	int ymax = Interactor->GetRenderWindow()->GetSize()[1];

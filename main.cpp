@@ -22,7 +22,7 @@ VTK_MODULE_INIT(vtkInteractionStyle);
 
 #include "Grid.h"
 #include "PlaneGrid.h"
-#include "GridInteractorStyle.h"
+#include "InteractorStyle.h"
 #include "MainAxes.h"
 #include "Point.h"
 
@@ -80,10 +80,10 @@ int main(int, char* [])
 	renderer->AutomaticLightCreationOff();
 	renderer->GradientEnvironmentalBGOff();
 	
-	GridInteractorStyle* newGrid = new GridInteractorStyle(plane, axes,marker, drawPoints, renderer);
+	InteractorStyle* newGrid = new InteractorStyle(plane, axes,marker, drawPoints, renderer);
 
-	vtkSmartPointer<GridInteractorStyle> style =
-		vtkSmartPointer<GridInteractorStyle>::Take(newGrid);
+	vtkSmartPointer<InteractorStyle> style =
+		vtkSmartPointer<InteractorStyle>::Take(newGrid);
 	renderWindowInteractor->SetInteractorStyle(style);
 
 	renderwindow->SetSize(sizewin);
