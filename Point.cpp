@@ -66,6 +66,14 @@ double* Point::GetPosition()
 	return actor->GetPosition();
 }
 
+bool Point::Equals(Point* a) {
+	bool flg = false;
+	if (GetPosition() == a->GetPosition()) {
+		flg = true;
+	}
+	return flg;
+}
+
 vtkSmartPointer<vtkActor> Point::GetActor()
 {
 	return actor;

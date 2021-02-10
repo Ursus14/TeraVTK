@@ -1,4 +1,4 @@
-#include "DoubleClick.h"
+#include "UserEvents.h"
 #include "Grid.h"
 #include "PlaneGrid.h"
 #include "MainAxes.h"
@@ -6,11 +6,11 @@
 #include "Lines.h"
 #include "BrokenLine.h"
 
-class VTKINTERACTIONSTYLE_EXPORT InteractorStyle: public DoubleClick
+class VTKINTERACTIONSTYLE_EXPORT InteractorStyle: public UserEvents
 {
 public:
 	static InteractorStyle* New();
-	vtkTypeMacro(InteractorStyle, DoubleClick);
+	vtkTypeMacro(InteractorStyle, UserEvents);
 	InteractorStyle();
 	InteractorStyle(PlaneGrid* _plane, 
 					MainAxes* _axes,

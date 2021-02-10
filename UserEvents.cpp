@@ -1,12 +1,12 @@
-#include "DoubleClick.h"
+#include "UserEvents.h"
 
-vtkStandardNewMacro(DoubleClick);
+vtkStandardNewMacro(UserEvents);
 
-DoubleClick::DoubleClick() {
+UserEvents::UserEvents() {
 
 }
 
-void DoubleClick::OnLeftDoubleClick() {
+void UserEvents::OnLeftDoubleClick() {
     FindPokedRenderer(Interactor->GetEventPosition()[0], Interactor->GetEventPosition()[1]);
     if (CurrentRenderer == nullptr) {
         return;
@@ -15,7 +15,7 @@ void DoubleClick::OnLeftDoubleClick() {
     GrabFocus(this->EventCallbackCommand);
 }
 
-void DoubleClick::OnLeftButtonDown() { 
+void UserEvents::OnLeftButtonDown() {
     FindPokedRenderer(Interactor->GetEventPosition()[0], Interactor->GetEventPosition()[1]);
     if (CurrentRenderer == nullptr) {
         return;
@@ -61,7 +61,7 @@ void DoubleClick::OnLeftButtonDown() {
     }
 }
 
-void DoubleClick::OnLeftButtonUp() {
+void UserEvents::OnLeftButtonUp() {
     EndTimer();
     if (Interactor) {
         ReleaseFocus();
@@ -69,7 +69,7 @@ void DoubleClick::OnLeftButtonUp() {
 }
 
 
-void DoubleClick ::OnTimer() {
+void UserEvents::OnTimer() {
     if (CurrentRenderer == nullptr) {
         return;
     }
