@@ -58,6 +58,7 @@ int main(int, char* [])
 	renderer->AddActor(plane->GetActor(3));
 	renderer->AddActor(axes->GetActor());
 	renderer->AddActor(marker->GetActor());
+
 	renderer->SetBackground(1, 1, 1);
 
 	vtkSmartPointer<vtkRenderWindow> renderwindow =

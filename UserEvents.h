@@ -41,8 +41,7 @@
 #include "vtkObjectFactory.h"
 #include "vtkRenderWindowInteractor.h"
 
-class VTKINTERACTIONSTYLE_EXPORT UserEvents : public vtkInteractorStyleTrackballCamera
-{
+class VTKINTERACTIONSTYLE_EXPORT UserEvents : public vtkInteractorStyleTrackballCamera {
 public:
 	static UserEvents* New();
 	vtkTypeMacro(UserEvents, vtkInteractorStyleTrackballCamera);
@@ -56,10 +55,10 @@ public:
 	virtual void OnTimer();
 	virtual void Scrolling() {};
 
-
 private:
 	double doubleClickTimeLimit = 0.5;
 	std::array<int, 2> PreviousPosition = { 0,0 };
+
 	int ResetPixelDistance = 5;
 	unsigned int NumberOfClicks = 0;
 	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();

@@ -59,6 +59,9 @@
     <ClInclude Include="Point.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="InteractorStyle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Line.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>

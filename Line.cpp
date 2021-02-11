@@ -10,16 +10,25 @@ Line::Line(vtkSmartPointer<vtkActor> lineActor) {
 	lineActor_ = lineActor;
 };
 
+Line::Line(vtkSmartPointer<vtkActor> lineActor, double* coordinateB, double* coordinateE) {
+	points[0] = Point();
+	points[1] = Point();
+
+	SetBeginPosition(coordinateB);
+	SetEndPosition(coordinateE);
+
+	lineActor_ = lineActor;
+
+};
+
 void Line::SetEndPosition(double* coordinate) {
 	endPosition[0] = coordinate[0];
 	endPosition[1] = coordinate[1];
-	endPosition[2] = 0.0;
 }
 
 void Line::SetBeginPosition(double* coordinate) {
 	beginPosition[0] = coordinate[0];
 	beginPosition[1] = coordinate[1];
-	beginPosition[2] = 0.0;
 }
 
 double* Line::GetBeginPosition() {
@@ -58,8 +67,8 @@ void Line::build(double* coordinateE, vtkSmartPointer<vtkRenderer> renderer, dou
 	points[1].SetRadius(radius);
 
 
-	points[0].SetPosition(beginPosition);
-	points[1].SetPosition(endPosition);
+	points[0].SetPosition(new double[3]{ beginPosition[0], beginPosition[1], 0.0 });
+	points[1].SetPosition(new double[3]{ endPosition[0],endPosition[1], 0.0 });
 
 	renderer->AddActor(lineActor_);
 }

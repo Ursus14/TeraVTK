@@ -18,7 +18,8 @@ public:
 	void SetColor(int r, int g, int b); // parameter values from 0 to 255
 	void VisibilityOn();
 	void VisibilityOff();
-
+	
+	bool Equals(Point* a);
 	double GetRadius();
 	double* GetPosition();
 	vtkSmartPointer<vtkActor> GetActor();
