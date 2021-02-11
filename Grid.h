@@ -4,10 +4,8 @@
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkProperty.h>
-#include <array>
 
-class Grid
-{
+class Grid {
 public:
 	Grid();
 	Grid(double* _position, double* _size, double* _cell);
@@ -25,9 +23,9 @@ public:
 	void BuildActor(); 
 
 private:
+	void build(double* _position, double* _size, double* _cell);
 	vtkSmartPointer<vtkActor> actor;
 	std::array<double, 3> position;	// coordinates in space
 	std::array<double, 2> size;		// the sizes of the rectangle grid
 	std::array<double, 2> cell;		// the cell size
 };
-

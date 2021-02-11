@@ -1,12 +1,10 @@
 #include "InteractorStyle.h"
 vtkStandardNewMacro(InteractorStyle);
 
-InteractorStyle::InteractorStyle()
-{
+InteractorStyle::InteractorStyle(){
 }
 
-InteractorStyle::InteractorStyle(PlaneGrid* _plane, MainAxes* _axes, Point* _marker, std::vector<Point> _drawPoints, vtkSmartPointer<vtkRenderer> _renderer)
-{
+InteractorStyle::InteractorStyle(PlaneGrid* _plane, MainAxes* _axes, Point* _marker, std::vector<Point> _drawPoints, vtkSmartPointer<vtkRenderer> _renderer){
 	plane = _plane;
 	renderer = _renderer;
 	axes = _axes;
@@ -14,48 +12,44 @@ InteractorStyle::InteractorStyle(PlaneGrid* _plane, MainAxes* _axes, Point* _mar
 	drawPoints = _drawPoints;
 }
 
-void InteractorStyle::OnMouseWheelBackward()
-{
+
+void InteractorStyle::OnMouseWheelBackward(){
 	vtkInteractorStyleTrackballCamera::OnMouseWheelBackward();
 	plane->RebuildPlane(renderer->GetActiveCamera(), Interactor->GetRenderWindow()->GetSize());
 	axes->RebuildAxes(renderer->GetActiveCamera(), Interactor->GetRenderWindow()->GetSize());
 }
 
-void InteractorStyle::OnMouseWheelForward()
-{
+
+void InteractorStyle::OnMouseWheelForward(){
 	vtkInteractorStyleTrackballCamera::OnMouseWheelForward();
 	plane->RebuildPlane(renderer->GetActiveCamera(), Interactor->GetRenderWindow()->GetSize());
 	axes->RebuildAxes(renderer->GetActiveCamera(), Interactor->GetRenderWindow()->GetSize());
 }
 
-void InteractorStyle::OnRightButtonDown()
-{
+void InteractorStyle::OnRightButtonDown(){
 	vtkInteractorStyleTrackballCamera::OnMiddleButtonDown();
 }
 
-void InteractorStyle::OnRightButtonUp()
-{
+void InteractorStyle::OnRightButtonUp(){
 	vtkInteractorStyleTrackballCamera::OnMiddleButtonUp();
 }
-void InteractorStyle::OnLeftButtonDown()
-{
-	UserEvents::OnLeftButtonDown();
+void InteractorStyle::OnLeftButtonDown() {
+	DoubleClick::OnLeftButtonDown();
 	prevPosition[0] = GetCurrentMousePosition()[0];
 	prevPosition[1] = GetCurrentMousePosition()[1];
 	line_->SetBeginPosition(prevPosition);
 	line_->SetEndPosition(prevPosition);
 	isAddLine = true;
-	line_->build(GetCurrentMousePosition(), renderer, 0.025 * plane->GetCell()[0]);
+	line_->build(prevPosition, renderer, 0.025 * plane->GetCell()[0]);
 	Interactor->GetRenderWindow()->Render();
 }
 
-void InteractorStyle::OnLeftButtonUp()
-{
-	UserEvents::OnLeftButtonUp();
+void InteractorStyle::OnLeftButtonUp(){
+	DoubleClick::OnLeftButtonUp();
 
 	line_->rebuild(GetCurrentMousePosition(), renderer);
 
-	if (line_->GetLength() == 0) {
+	if (line_->GetLengthSquare() == 0) {
 		line_->Remove(renderer);
 	}
 	else {
@@ -66,17 +60,14 @@ void InteractorStyle::OnLeftButtonUp()
 			}
 		}
 		lines_.push_back(line_);
-	
 		Interactor->GetRenderWindow()->Render();
 		line_ = new Line(vtkSmartPointer<vtkActor>::New());
 	}
 	isAddLine = false;
-}
-
-void InteractorStyle::OnMouseMove()
-{
+} 
+void InteractorStyle::OnMouseMove(){
 	vtkInteractorStyleTrackballCamera::OnMouseMove();
-	plane->HitTestingAtBorder(renderer->GetActiveCamera());
+	plane->BorderHitCheck(renderer->GetActiveCamera());
 	axes->RebuildAxes(renderer->GetActiveCamera(), Interactor->GetRenderWindow()->GetSize());
 
 	double coordinate[3];
@@ -98,31 +89,28 @@ void InteractorStyle::OnMouseMove()
 
 }
 
-void InteractorStyle::OnLeave()
-{
+void InteractorStyle::OnLeave(){
 	vtkInteractorStyleTrackballCamera::OnLeave();
 	marker->VisibilityOff();
 	Interactor->GetRenderWindow()->Render();
 }
 
-void InteractorStyle::OnLeftDoubleClick()
-{
-	UserEvents::OnLeftDoubleClick();
-	drawPoints.push_back(Point(GetCurrentMousePosition(),0.025 * plane->GetCell()[0]));
-	drawPoints[drawPoints.size() - 1].SetColor(0,0,0);
-	renderer->AddActor(drawPoints[drawPoints.size()-1].GetActor());
+void InteractorStyle::OnLeftDoubleClick(){
+	DoubleClick::OnLeftDoubleClick();
+	drawPoints.push_back(Point(GetCurrentMousePosition(), 0.025 * plane->GetCell()[0]));
+	drawPoints[drawPoints.size() - 1].SetColor(0, 0, 0);
+	renderer->AddActor(drawPoints[drawPoints.size() - 1].GetActor());
 }
 
-void InteractorStyle::Scrolling()
-{
+void InteractorStyle::Scrolling(){
 	if (isAddLine) {
 		int* mousePos = Interactor->GetEventPosition();
 		int* sizeWin = Interactor->GetRenderWindow()->GetSize();
 		int delta = 20;
-		double mult = renderer->GetActiveCamera()->GetParallelScale()/8;
+		double mult = renderer->GetActiveCamera()->GetParallelScale() / 8;
 
 		if (mousePos[0] < delta) {
-			mult = renderer->GetActiveCamera()->GetParallelScale() * abs(atan((mousePos[0] - delta) / 100.0) ) / 12.0;
+			mult = renderer->GetActiveCamera()->GetParallelScale() * abs(atan((mousePos[0] - delta) / 100.0)) / 12.0;
 			renderer->GetActiveCamera()->SetPosition(renderer->GetActiveCamera()->GetPosition()[0] - mult, renderer->GetActiveCamera()->GetPosition()[1], renderer->GetActiveCamera()->GetPosition()[2]);
 		}
 		if (mousePos[0] > sizeWin[0] - delta) {
@@ -130,7 +118,7 @@ void InteractorStyle::Scrolling()
 			renderer->GetActiveCamera()->SetPosition(renderer->GetActiveCamera()->GetPosition()[0] + mult, renderer->GetActiveCamera()->GetPosition()[1], renderer->GetActiveCamera()->GetPosition()[2]);
 		}
 		if (mousePos[1] < delta) {
-			mult = renderer->GetActiveCamera()->GetParallelScale() * abs(atan((mousePos[1] - delta)/100.0)) / 12.0;
+			mult = renderer->GetActiveCamera()->GetParallelScale() * abs(atan((mousePos[1] - delta) / 100.0)) / 12.0;
 			renderer->GetActiveCamera()->SetPosition(renderer->GetActiveCamera()->GetPosition()[0], renderer->GetActiveCamera()->GetPosition()[1] - mult, renderer->GetActiveCamera()->GetPosition()[2]);
 		}
 		if (mousePos[1] > sizeWin[1] - delta) {
@@ -155,8 +143,7 @@ double* InteractorStyle::GetCurrentMousePosition() {
 	return world;
 }
 
-double* InteractorStyle::GetViewportBorder()
-{
+double* InteractorStyle::GetViewportBorder(){
 	int xmax = Interactor->GetRenderWindow()->GetSize()[0];
 	int ymax = Interactor->GetRenderWindow()->GetSize()[1];
 
@@ -176,4 +163,4 @@ double* InteractorStyle::GetViewportBorder()
 	coordinateMin->SetValue(xmin, ymin, 0);
 	double* worldMin = coordinateMin->GetComputedWorldValue(Interactor->GetRenderWindow()->GetRenderers()->GetFirstRenderer());
 	return new double[4]{ worldMin[0], worldMax[0], worldMin[1], worldMax[1] };
-}
+	}

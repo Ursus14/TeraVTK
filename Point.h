@@ -24,7 +24,8 @@ public:
 	vtkSmartPointer<vtkActor> GetActor();
 
 private:
+	void build(double* position, double radius);
+	
 	vtkSmartPointer<vtkActor> actor;
 	double radius;
 };
-

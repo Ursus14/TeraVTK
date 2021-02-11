@@ -21,10 +21,10 @@ public:
 
 private:
 	void FlippingGrids(int borderNumber);
+	void build(double* cell, int* sizewin, double parallelScale);
 
 	Grid pGrids[4];									// four elements of the coordinate plane
 	std::array<double, 4> borderline;				// boundaries where the camera can be located
 	std::array<int,4> sequence= { 0, 1, 2, 3 };		// to indicate the position of each grid
 
 };
-

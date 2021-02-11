@@ -16,8 +16,7 @@ public:
 
 	void SetBeginPosition(double* coordinate);
 	double* GetBeginPosition();
-
-	double GetLength();
+	double GetLengthSquare();
 
 	void build(double* coordinateE, vtkSmartPointer<vtkRenderer> renderer, double radius);
 	void rebuild(double* coordinateE, vtkSmartPointer<vtkRenderer> renderer);
@@ -29,4 +28,3 @@ private:
 	Point points[2];
 	vtkSmartPointer<vtkActor> lineActor_;
 };
-

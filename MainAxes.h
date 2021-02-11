@@ -16,6 +16,7 @@ public:
 	vtkSmartPointer<vtkActor> GetActor();
 
 private:
+	void build(int* sizewin, double parallelScale);
+	
 	vtkSmartPointer<vtkActor> actor;
 };
-

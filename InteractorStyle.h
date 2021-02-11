@@ -1,3 +1,4 @@
+
 #pragma once
 #include "UserEvents.h"
 #include "Grid.h"
@@ -40,7 +41,8 @@ private:
 	bool isAddLine = false;
 	double dx = 0;
 	double dy = 0;
-	double prevPosition[3]= { 0.0, 0.0, 0.0 };
+	double prevPosition[3] = { 0.0, 0.0, 0.0 };
+
 	std::vector<Line*> lines_;
 	Line* line_ = new Line(vtkSmartPointer<vtkActor>::New());
 	Lines* lines = new Lines();
