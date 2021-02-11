@@ -17,62 +17,53 @@ void Grid::build(double* _position, double* _size, double* _cell) {
 	actor->SetPosition(position[0], position[1], position[2]);
 }
 
-void Grid::SetPosition(double* newpos)
-{
+void Grid::SetPosition(double* newpos){
 	position[0] = newpos[0];
 	position[1] = newpos[1];
 	actor->SetPosition(position[0], position[1], position[2]);
 }
 
-void Grid::SetPosition(double newX, double newY, double newZ)
-{
+void Grid::SetPosition(double newX, double newY, double newZ){
 	position[0] = newX;
 	position[1] = newY;
 	position[2] = newZ;
 	actor->SetPosition(position[0], position[1], position[2]);
 }
 
-void Grid::SetSize(double* newsize, bool rebuild)
-{
+void Grid::SetSize(double* newsize, bool rebuild){
 	size[0] = newsize[0];
 	size[1] = newsize[1];
 	if (rebuild)
 		BuildActor();
 }
 
-void Grid::SetCell(double cellX, double cellY, bool rebuild)
-{
+void Grid::SetCell(double cellX, double cellY, bool rebuild){
 	cell[0] = cellX;
 	cell[1] = cellY;
 	if (rebuild)
 		BuildActor();
 }
 
-double* Grid::GetPosition()
-{
+double* Grid::GetPosition(){
 	double* getpos = new double[2]{ position[0],position[1] };
 	return getpos;
 }
 
-double* Grid::GetSize()
-{
+double* Grid::GetSize(){
 	double* getsize = new double[2]{ size[0],size[1] };
 	return getsize;
 }
 
-double* Grid::GetCell()
-{
+double* Grid::GetCell(){
 	double* getcell = new double[2]{ cell[0],cell[1] };
 	return getcell;
 }
 
-vtkSmartPointer<vtkActor> Grid::GetActor()
-{
+vtkSmartPointer<vtkActor> Grid::GetActor(){
 	return actor;
 }
 
-void Grid::BuildActor()
-{
+void Grid::BuildActor(){
 	vtkSmartPointer<vtkPoints> points = vtkPoints::New();
 	vtkSmartPointer<vtkCellArray> lines = vtkCellArray::New();
 
