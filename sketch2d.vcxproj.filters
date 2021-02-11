@@ -48,6 +48,9 @@
     <ClCompile Include="..\..\teraProject\teraProject\teraProject\task.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Arc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BrokenLine.h">
@@ -75,6 +78,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="UserEvents.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Arc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -58,6 +58,7 @@ void InteractorStyle::OnLeftButtonUp(){
 			}
 		}
 		lines_.push_back(line_);
+		lines->add(line_, renderer);
 
 		Interactor->GetRenderWindow()->Render();
 		line_ = new Line(vtkSmartPointer<vtkActor>::New());

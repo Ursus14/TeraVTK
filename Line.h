@@ -10,6 +10,7 @@ class Line
 {
 public:
 	Line(vtkSmartPointer<vtkActor> lineActor);
+	Line(vtkSmartPointer<vtkActor> lineActor, double* coordinateB, double* coordinateE);
 
 public:
 	void SetEndPosition(double* coordinate);
@@ -25,8 +26,8 @@ public:
 	void Remove(vtkSmartPointer<vtkRenderer> renderer);
 
 private:
-	double beginPosition[3];
-	double endPosition[3];
+	double beginPosition[2];
+	double endPosition[2];
 	Point points[2];
 	vtkSmartPointer<vtkActor> lineActor_;
 };

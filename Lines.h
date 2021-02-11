@@ -1,12 +1,12 @@
 #include "Line.h"
-
+#include <array>
 class Lines
 {
 public:
 	Lines();
 
 public:
-	void add(Line* line);
+	void add(Line* line, vtkSmartPointer<vtkRenderer> renderer);
 
 	bool intersect(Line* a, Line* b);
 

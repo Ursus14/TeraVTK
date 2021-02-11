@@ -144,6 +144,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\teraProject\teraProject\teraProject\task.cpp" />
+    <ClCompile Include="Arc.cpp" />
     <ClCompile Include="BrokenLine.cpp" />
     <ClCompile Include="UserEvents.cpp" />
     <ClCompile Include="Grid.cpp" />
@@ -156,6 +157,7 @@
     <ClCompile Include="Point.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Arc.h" />
     <ClInclude Include="BrokenLine.h" />
     <ClInclude Include="UserEvents.h" />
     <ClInclude Include="Grid.h" />
