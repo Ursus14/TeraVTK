@@ -89,7 +89,7 @@ void PlaneGrid::RebuildPlane(vtkCamera* camera, int* sizewin) {
 	RecountBorderline();
 }
 
-void PlaneGrid::BorderHitCheck(vtkCamera* camera) {
+void PlaneGrid::HitTestingAtBorder(vtkCamera* camera) {
 	int borderNumber = -1;
 
 	if (camera->GetPosition()[0] < borderline[0]) {

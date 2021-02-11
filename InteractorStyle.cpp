@@ -34,7 +34,7 @@ void InteractorStyle::OnRightButtonUp(){
 	vtkInteractorStyleTrackballCamera::OnMiddleButtonUp();
 }
 void InteractorStyle::OnLeftButtonDown() {
-	DoubleClick::OnLeftButtonDown();
+	UserEvents::OnLeftButtonDown();
 	prevPosition[0] = GetCurrentMousePosition()[0];
 	prevPosition[1] = GetCurrentMousePosition()[1];
 	line_->SetBeginPosition(prevPosition);
@@ -45,7 +45,7 @@ void InteractorStyle::OnLeftButtonDown() {
 }
 
 void InteractorStyle::OnLeftButtonUp(){
-	DoubleClick::OnLeftButtonUp();
+	UserEvents::OnLeftButtonUp();
 
 	line_->rebuild(GetCurrentMousePosition(), renderer);
 
@@ -67,7 +67,7 @@ void InteractorStyle::OnLeftButtonUp(){
 } 
 void InteractorStyle::OnMouseMove(){
 	vtkInteractorStyleTrackballCamera::OnMouseMove();
-	plane->BorderHitCheck(renderer->GetActiveCamera());
+	plane->HitTestingAtBorder(renderer->GetActiveCamera());
 	axes->RebuildAxes(renderer->GetActiveCamera(), Interactor->GetRenderWindow()->GetSize());
 
 	double coordinate[3];
@@ -96,7 +96,7 @@ void InteractorStyle::OnLeave(){
 }
 
 void InteractorStyle::OnLeftDoubleClick(){
-	DoubleClick::OnLeftDoubleClick();
+	UserEvents::OnLeftDoubleClick();
 	drawPoints.push_back(Point(GetCurrentMousePosition(), 0.025 * plane->GetCell()[0]));
 	drawPoints[drawPoints.size() - 1].SetColor(0, 0, 0);
 	renderer->AddActor(drawPoints[drawPoints.size() - 1].GetActor());

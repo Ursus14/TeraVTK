@@ -1,4 +1,4 @@
-﻿#include <vtkAutoInit.h>
+#include <vtkAutoInit.h>
 
 VTK_MODULE_INIT(vtkRenderingOpenGL2);
 VTK_MODULE_INIT(vtkRenderingFreeType);
@@ -40,18 +40,20 @@ int main(int, char* [])
 {
 	vtkSmartPointer<vtkCamera> camera = vtkSmartPointer<vtkCamera>::New();
 	vtkSmartPointer<vtkRenderer> renderer = vtkSmartPointer<vtkRenderer>::New();
-
+	
+<<<<<<< HEAD
 	double cell[2] = { 1,1 };
 	double parallelScale = 4;
 	int sizewin[2] = { 600,600 };
 
+>>>>>>> Ursus14
 
-		PlaneGrid* plane = new PlaneGrid(cell, sizewin, parallelScale);
-	MainAxes* axes = new MainAxes(sizewin, parallelScale);
-	Point* marker = new Point(0.03 * cell[0]);
+	PlaneGrid* plane = new PlaneGrid(cell,sizewin,parallelScale);
+	MainAxes* axes = new MainAxes(sizewin,parallelScale);
+	Point* marker = new Point(0.03*cell[0]);
 	marker->VisibilityOff();
 	std::vector<Point> drawPoints;
-
+	
 	renderer->AddActor(plane->GetActor(0));
 	renderer->AddActor(plane->GetActor(1));
 	renderer->AddActor(plane->GetActor(2));
@@ -77,11 +79,11 @@ int main(int, char* [])
 
 	renderer->SetActiveCamera(camera);
 	renderer->GetActiveCamera()->AddObserver(vtkCommand::ModifiedEvent, modifiedcallback);
-
+	
 	renderer->AutomaticLightCreationOff();
 	renderer->GradientEnvironmentalBGOff();
-
-	InteractorStyle* newGrid = new InteractorStyle(plane, axes, marker, drawPoints, renderer);
+	
+	InteractorStyle* newGrid = new InteractorStyle(plane, axes,marker, drawPoints, renderer);
 
 	vtkSmartPointer<InteractorStyle> style =
 		vtkSmartPointer<InteractorStyle>::Take(newGrid);

@@ -5,6 +5,7 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkCamera.h>
 #include <cmath>
+#include <array>
 
 class PlaneGrid
 {

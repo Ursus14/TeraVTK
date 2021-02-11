@@ -1,17 +1,14 @@
 #include "Grid.h"
 
-Grid::Grid()
-{
-	position = { 0.0, 0.0, 0.0 };
-	size = { 10.0, 10.0 };
-	cell = { 1.0, 1.0 };
-	actor = vtkSmartPointer<vtkActor>::New();
-	BuildActor();
-	actor->SetPosition(position[0], position[1], position[2]);
+Grid::Grid() {
+	build(new double[3]{ 0.0, 0.0, 0.0 }, new double[2]{ 10.0, 10.0 }, new double[2]{ 1.0, 1.0 });
 }
 
-Grid::Grid(double* _position, double* _size, double* _cell)
-{
+Grid::Grid(double* _position, double* _size, double* _cell) {
+	build(_position, _size, _cell);
+}
+
+void Grid::build(double* _position, double* _size, double* _cell) {
 	position = { _position[0], _position[1], 0.0 };
 	size = { _size[0], _size[1] };
 	cell = { _cell[0], _cell[1] };
@@ -80,18 +77,18 @@ void Grid::BuildActor()
 	vtkSmartPointer<vtkCellArray> lines = vtkCellArray::New();
 
 	int num = 0;
-	for (double i = -size[1]/2.0; i <= size[1]/2.0; i+=cell[1]) {
-		points->InsertNextPoint(-size[0]/2, i , 0);
-		points->InsertNextPoint(size[0]/2, i , 0);
+	for (double i = -size[1] / 2.0; i <= size[1] / 2.0; i += cell[1]) {
+		points->InsertNextPoint(-size[0] / 2, i, 0);
+		points->InsertNextPoint(size[0] / 2, i, 0);
 
 		vtkIdType tcell[] = { 2 * num, 2 * num + 1 };
 		lines->InsertNextCell(2, tcell);
 		num++;
 	}
 
-	for (double i = -size[0]/2.0; i <= size[0]/2.0; i+=cell[0]) {
-		points->InsertNextPoint(i, -size[1]/2, 0);
-		points->InsertNextPoint(i , size[1]/2, 0);
+	for (double i = -size[0] / 2.0; i <= size[0] / 2.0; i += cell[0]) {
+		points->InsertNextPoint(i, -size[1] / 2, 0);
+		points->InsertNextPoint(i, size[1] / 2, 0);
 
 		vtkIdType tcell[] = { 2 * num, 2 * num + 1 };
 		lines->InsertNextCell(2, tcell);
